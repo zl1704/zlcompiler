@@ -1,0 +1,10 @@
+class Test{
+	//public int a;//属性
+	//double b = 3.5;
+	int c = 3;
+	A s ="s1
+	23";
+	char c = 'ss';
+
+	
+}

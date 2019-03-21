@@ -1,0 +1,44 @@
+class Test{
+
+{
+	a=3;
+}
+
+	public  int a = -3.1;
+	int d = 3.1;
+
+static{
+	
+	A a = new A();
+	i ++;
+	
+	d= 3.1;
+}
+
+	private static void main(double b){
+		A a = new A();
+		a.test();
+		double c[] = new int [10];
+		int x = a.length;
+		Test t[] = new Test[10];
+		Test t1 = new Test(1);
+		a = a+main();
+		this.a = 1;
+	}
+	public static void main(String args[]){
+	
+	}
+	
+	private void main(){
+		
+	
+	}
+  
+}
+
+class A{
+	public int a;
+
+	void test(){}
+
+}

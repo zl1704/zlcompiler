@@ -1,0 +1,44 @@
+class Test{
+	public int a = -3.1;
+	int d = 3.1;
+	double dd = 3;
+	static int tt[][] = new int[10][5];
+	
+	private static void main(int a){
+	boolean d;
+	int a;
+	Test t;
+	t = tt[10];
+		if(a){
+			
+		}else{
+			
+		}
+		main();
+		t.main();
+		B b = new B();
+		b.a = 1;
+		b.test(1);
+		a = d;
+		for(int i = 0;i<10;i++){
+			
+		
+		}
+		
+	}
+
+	private  void main(){
+	
+	
+	}
+
+}
+
+class B{
+	public int a;
+	 public  void test(){
+	 
+	}
+
+}
+
