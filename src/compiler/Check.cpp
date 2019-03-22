@@ -26,13 +26,13 @@ Check::~Check() {
 }
 
 /**
- * 检查foundd类型是否可赋值给req类型
+ * 检查found类型是否可赋值给req类型
  *               char
  *   byte  short int  float double
  *
  */
 
-bool isAssignable(Type* found, Type* req){
+bool Check::isAssignable(Type* found, Type* req){
 
 	if(found->tag == req->tag)
 		return true;

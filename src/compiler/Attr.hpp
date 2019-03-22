@@ -7,6 +7,7 @@
 
 #ifndef PARSER_ATTR_HPP_
 #define PARSER_ATTR_HPP_
+#include "ConstFold.hpp"
 #include "Enter.hpp"
 class Enter;
 /**
@@ -100,7 +101,7 @@ private:
 		Type* pt;
 		int pkind;
 		Log* log;
-
+		ConstFold* cfolder;
 		void attribute(ClassSymbol* c);
 		void attriClassBody(Env<AttrContext*>* env,ClassSymbol* c);
 };

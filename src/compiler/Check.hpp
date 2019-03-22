@@ -23,6 +23,8 @@ public:
 	static Tree* skipParens(Tree* tree);
 	static Expression* skipParens(Expression* tree);
 	static string treeName(Tree* tree);
+	//类型兼容
+	bool isAssignable(Type* found, Type* req);
 	//检查符号重复
 	bool checkUnique(int pos,Symbol* sym,Scope* scope);
 	bool checkUniqueClassName(int pos,string name,Scope* scope);

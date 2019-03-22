@@ -29,6 +29,9 @@ class Test{
 
 	private  void main(){
 	
+	 byte b1=5;
+	 byte b2=5;
+	 b1=b1+b2;
 	
 	}
 

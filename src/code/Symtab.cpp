@@ -35,7 +35,7 @@ OperatorSymbol* Symtab::enterUnop(string name, Type* arg, Type* res,
 	predefClass->members()->enter(sym);
 	return sym;
 }
-
+//opcode1为真实指令码
 void Symtab::enterBinop(string name, Type* left, Type* right, Type* res,
 		int opcode1, int opcode2) {
 	enterBinop(name, left, right, res,
@@ -253,6 +253,7 @@ Symtab::Symtab() {
 	enterBinop(">>>", intType, longType, intType, ByteCodes::iushrl);
 	enterBinop(">>>", longType, intType, longType, ByteCodes::lushr);
 	enterBinop(">>>", intType, intType, intType, ByteCodes::iushr);
+
 
 	enterBinop("<", doubleType, doubleType, booleanType, ByteCodes::dcmpg, ByteCodes::iflt);
 	enterBinop("<", floatType, floatType, booleanType,ByteCodes::fcmpg, ByteCodes::iflt);

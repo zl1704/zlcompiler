@@ -52,21 +52,22 @@ typedef long long 		jlong;
 typedef float           jfloat;
 typedef double          jdouble;
 typedef unsigned short  jchar;
+typedef union {
+	jboolean _b;
+	jchar c; //java char
+	jbyte b;
+	jshort s;
+	jint i;
+	jlong l;
+	jfloat f;
+	jdouble d;
+
+} Object;
 class ConstType:public Type{
 public:
 //	Constant constVal;
 	//值
-	union {
-		jboolean _b;
-		jchar c; //java char
-		jbyte b;
-		jshort s;
-		jint i;
-		jlong l;
-		jfloat f;
-		jdouble d;
-
-	} val;
+	Object val;
 	string str;
 	static ConstType* create(int tag, string value);
 	virtual bool isConst(){return true;};

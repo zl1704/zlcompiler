@@ -10,8 +10,9 @@ int* Attr::attrKey = new int;
 
 Attr* Attr::instance() {
 	Attr* attr = (Attr*) Context::get(attrKey);
-	if (attr == NULL)
+	if (attr == NULL){
 		attr = new Attr();
+	}
 	return attr;
 
 }
@@ -22,6 +23,7 @@ Attr::Attr() {
 	enter = Enter::instance();
 	chk = Check::instance();
 	log = Log::instance();
+	cfolder = ConstFold::instance();
 }
 
 Attr::~Attr() {
@@ -115,10 +117,7 @@ Type* Attr::check(Tree* tree, Type* owntype, Type* pt, int ownkind, int pkind,
 			&& pt->tag != TypeTags::METHOD) {
 		//note
 		if ((ownkind & ~pkind) == 0)
-
-
 			owntype = chk->checkType(tree->pos,owntype,pt,errKey);
-//			owntype = chk->checkType(tree->pos,owntype,pt,errKey);
 		else{
 			log->report(tree->pos,Log::ERROR,errKey);
 
@@ -138,6 +137,8 @@ Symbol* Attr::findMethod(int pos, Scope* s, string name,
 		s->print();
 		cout << endl;
 	}
+	Scope* ps = s;
+	//尝试查找参数完全匹配的方法
 	while (s) {
 		for (Entry* e = s->findLocal(name); e; e = e->next) {
 			if (e->sym->kind == Kinds::MTH && e->sym->name == name) {
@@ -160,6 +161,31 @@ Symbol* Attr::findMethod(int pos, Scope* s, string name,
 		}
 		s = s->next;
 	}
+	s = ps;
+	//查找参数兼容的方法
+	while (s) {
+			for (Entry* e = s->findLocal(name); e; e = e->next) {
+				if (e->sym->kind == Kinds::MTH && e->sym->name == name) {
+					MethodType* mt = ((MethodType*) e->sym->type);
+					if (mt->argtypes.size() == argtypes.size()) {
+						bool f = true;
+						for (int i = 0; i < argtypes.size(); i++) {
+							if (chk->isAssignable( argtypes[i],mt->argtypes[i])) {
+								f = false;
+								break;
+							}
+						}
+						if (f) {
+							return e->sym;
+						}
+					}
+
+				}
+
+			}
+			s = s->next;
+		}
+
 	string err ="";
 	if(name == Name::init)
 		err = "没有找到构造方法:" + className + "(";
@@ -220,21 +246,21 @@ Symbol* Attr::findType(Env<AttrContext*>* env, string name) {
 	}
 	return syms->errSymbol;
 }
-Symbol* Attr::findVar(Env<AttrContext*>* env, string name) {
-
-}
+//Symbol* Attr::findVar(Env<AttrContext*>* env, string name) {
+//
+//}
 /**
  * 标注 二元操作符类型，决定表达式类型
  */
 Symbol* Attr::resolveBinaryOperator(int pos, Env<AttrContext*>* env, int optag,
 		Type* left, Type* right) {
 	if(util::debug){
-		cout
-				<< "寻找二元操作: " + Type::typeName(left) + "  "
+		cout<< "寻找二元操作: " + Type::typeName(left) + "  "
 						+ TreeInfo::operatorName(optag) + "   "
 						+ Type::typeName(right) << endl;
 	}
 	Scope* s = syms->predefClass->members();
+	//先找完全匹配
 	for (Entry* e = s->find(TreeInfo::operatorName(optag)); e; e = e->next) {
 		if (e->sym->name != TreeInfo::operatorName(optag))
 			continue;
@@ -259,6 +285,31 @@ Symbol* Attr::resolveBinaryOperator(int pos, Env<AttrContext*>* env, int optag,
 		}
 	}
 
+	//参数兼容
+	for (Entry* e = s->find(TreeInfo::operatorName(optag)); e; e = e->next) {
+			if (e->sym->name != TreeInfo::operatorName(optag))
+				continue;
+			OperatorSymbol* opsym = (OperatorSymbol*) e->sym;
+	//		cout<<"找到操作: ";
+	//		cout<<(opsym->opcode)<<endl;
+			MethodType* mt = (MethodType*) opsym->type;
+			if (mt->argtypes.size() == 2) {
+				//note!!! 判断需修改 ，最佳匹配
+				if (chk->isAssignable(left,mt->argtypes.at(0))
+						&& chk->isAssignable(right,mt->argtypes.at(1))) {
+					cout
+							<< "找到二元操作: " + Type::typeName(left) + "  "
+									+ TreeInfo::operatorName(optag) + "   "
+									+ Type::typeName(right);
+					cout
+							<< "\t结果类型: "
+									+ Type::typeName(
+											((MethodType*) opsym->type)->restype->tag)
+							<< endl;
+					return opsym;
+				}
+			}
+		}
 	string err = "没有找到匹配的运算    " + Type::typeName(left) + "  "
 			+ TreeInfo::operatorName(optag) + " " + Type::typeName(right);
 	log->report(pos, Log::ERROR, err);
@@ -666,14 +717,24 @@ void Attr::visitUnary(Unary* tree) {
 							attribExpr(tree->arg, env, Type::noType));
 	Symbol* opsym = tree->sym = resolveUnaryOperator(tree->pos, tree->getTag(),
 			env, argtype);
+	Type* owntype = syms->errType;
+	if(opsym->kind==Kinds::MTH){
 
-	Type* owntype = (Tree::PREINC <= tree->getTag() && tree->getTag() >= Tree::POSTDEC) ?tree->arg->type:((MethodType*)opsym->type)->restype;
+		owntype = (Tree::PREINC <= tree->getTag() && tree->getTag() >= Tree::POSTDEC) ?tree->arg->type:((MethodType*)opsym->type)->restype;
+		int opcode = ((OperatorSymbol*)opsym)->opcode;
+		if(argtype->isConst()){
+			Type* ct = cfolder->fold1(opcode,(ConstType*)argtype);
+			owntype = cfolder->coerce(ct,owntype);
+
+		}
+
+	}
 	result = check(tree,owntype,pt,pkind,Kinds::VAL,"类型不兼容");
 
 }
 
 /**
- * !!Todo:常量折叠
+ *
  */
 void Attr::visitBinary(Binary* tree) {
 //	cout<<"binary env:";
@@ -685,7 +746,19 @@ void Attr::visitBinary(Binary* tree) {
 			attribExpr(tree->rhs, env, Type::noType));
 	Symbol* opsym = tree->opsym = resolveBinaryOperator(tree->pos, env,
 			tree->getTag(), left, right);
-	Type* owntype = ((MethodType*) opsym->type)->restype;
+	Type* owntype = syms->errType ;
+	//左右都是常量，进行折叠
+	if(opsym->kind==Kinds::MTH){
+
+		owntype=((MethodType*) opsym->type)->restype;
+		int opcode = ((OperatorSymbol*)opsym)->opcode;
+		if(left->isConst()&&right->isConst()){
+
+
+		}
+
+
+	}
 	if (opsym != syms->errSymbol)
 		result = check(tree,owntype,pt,Kinds::VAL,pkind,"错误类型") ;
 	else

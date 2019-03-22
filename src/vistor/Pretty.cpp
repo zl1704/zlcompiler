@@ -671,7 +671,7 @@ void Pretty::visitLiteral(Literal* tree) {
 			print("\'" + tree->value + "\'");
 			break;
 		case TypeTags::BOOLEAN:
-			print(tree->value);
+			print(tree->value=="1"?"true":"false");
 			break;
 		case TypeTags::BOT:
 			print("null");
