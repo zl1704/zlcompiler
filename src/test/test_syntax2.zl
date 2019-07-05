@@ -1,7 +1,7 @@
 class Test{
 	public int a  -3.1;
 	 c= '1';
-	private static void main(  {
+	private static void main()  {
 		
 		
 	

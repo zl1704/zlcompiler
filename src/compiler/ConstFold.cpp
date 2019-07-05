@@ -29,14 +29,14 @@ Type* ConstFold::fold1(int opcode, ConstType* t) {
 	case ByteCodes::ineg://-
 		return ConstType::create(TypeTags::INT,toString<jint>(-strToNum<jint>(t->str)));
 	case ByteCodes::ixor://~
-		return ConstType::create(TypeTags::INT,toString<jint>(~strToNum<jint>(t->str)));;
+		return ConstType::create(TypeTags::INT,toString<jint>(~strToNum<jint>(t->str)));
 	case ByteCodes::bool_not://!
 		return ConstType::create(TypeTags::BOOLEAN,toString<jboolean>(!strToNum<jboolean>(t->str)));
 	case ByteCodes::ifeq://==0
 		return ConstType::create(TypeTags::BOOLEAN,toString<jboolean>(strToNum<jboolean>(t->str)==0));
 	case ByteCodes::lneg:
 		return ConstType::create(TypeTags::INT,toString<jlong>(-strToNum<jlong>(t->str)));
-	case ByteCodes::lxor:;
+	case ByteCodes::lxor:
 		return ConstType::create(TypeTags::INT,toString<jlong>(~strToNum<jlong>(t->str)));
 	case ByteCodes::fneg:
 		return ConstType::create(TypeTags::INT,toString<jfloat>(-strToNum<jfloat>(t->str)));;

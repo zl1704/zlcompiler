@@ -28,7 +28,13 @@ Check::~Check() {
 /**
  * 检查found类型是否可赋值给req类型
  *               char
+ *   虚拟机规范 5.1
  *   byte  short int  float double
+ *   byte to  short ,  int ,  long ,  float , or  double
+ *   short to  int ,  long ,  float , or  double
+ *   char to  int ,  long ,  float , or  double
+ *   int to  long ,  float , or  double
+ *   long to  float or  double
  *
  */
 
