@@ -16,6 +16,7 @@
 //		cout<<"没有输入文件";
 //		return 0;
 //	}
+	//7.5_start test
 	Compiler* complier =  Compiler::instance();
 	complier->compile(fileName);
 
