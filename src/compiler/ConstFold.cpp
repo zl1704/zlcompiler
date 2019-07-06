@@ -48,43 +48,103 @@ Type* ConstFold::fold1(int opcode, ConstType* t) {
 	return t;
 }
 //折叠二元操作
+/**
+ * NOTE: 补测试用例...
+ */
 Type* ConstFold::fold2(int opcode, ConstType* left, ConstType* right) {
 
 	switch(opcode){
 		case ByteCodes::bool_and:
-			return ConstType::create(TypeTags::BOOLEAN,toString<jboolean>(strToNum<jint>(left->str)&&strToNum<jint>(left->str)));
+			return ConstType::create(TypeTags::BOOLEAN,toString<jboolean>(strToNum<jint>(left->str)&&strToNum<jint>(right->str)));
 		case ByteCodes::bool_or:
-			return ConstType::create(TypeTags::BOOLEAN,toString<jboolean>(strToNum<jint>(left->str)||strToNum<jint>(left->str)));
+			return ConstType::create(TypeTags::BOOLEAN,toString<jboolean>(strToNum<jint>(left->str)||strToNum<jint>(right->str)));
 		case ByteCodes::iadd:
-			return ConstType::create(TypeTags::INT,toString<jint>(strToNum<jint>(left->str)+strToNum<jint>(left->str)));
+			return ConstType::create(TypeTags::INT,toString<jint>(strToNum<jint>(left->str)+strToNum<jint>(right->str)));
 		case ByteCodes::isub:
-			return ConstType::create(TypeTags::INT,toString<jint>(strToNum<jint>(left->str)+strToNum<jint>(left->str)));
+			return ConstType::create(TypeTags::INT,toString<jint>(strToNum<jint>(left->str)+strToNum<jint>(right->str)));
 		case ByteCodes::imul:
+			return ConstType::create(TypeTags::INT,toString<jint>(strToNum<jint>(left->str)*strToNum<jint>(right->str)));
 		case ByteCodes::idiv:
+			return ConstType::create(TypeTags::INT,toString<jint>(strToNum<jint>(left->str)/strToNum<jint>(right->str)));
 		case ByteCodes::imod:
+			return ConstType::create(TypeTags::INT,toString<jint>(strToNum<jint>(left->str)%strToNum<jint>(right->str)));
 		case ByteCodes::iand:
+			return ConstType::create(TypeTags::INT,toString<jint>(strToNum<jint>(left->str)&strToNum<jint>(right->str)));
 		case ByteCodes::ior:
+			return ConstType::create(TypeTags::INT,toString<jint>(strToNum<jint>(left->str)|strToNum<jint>(right->str)));
 		case ByteCodes::ixor:
+			return ConstType::create(TypeTags::INT,toString<jint>(strToNum<jint>(left->str)^strToNum<jint>(right->str)));
 		case ByteCodes::ishl:
+			return ConstType::create(TypeTags::INT,toString<jint>(strToNum<jint>(left->str)<<strToNum<jint>(right->str)));
 		case ByteCodes::ishr:
+			return ConstType::create(TypeTags::INT,toString<jint>(strToNum<jint>(left->str)>>strToNum<jint>(right->str)));
 		case ByteCodes::iushr:
-		case ByteCodes::if_icmpeq:
-		case ByteCodes::if_icmpne:
-		case ByteCodes::if_icmplt:
-		case ByteCodes::if_icmpgt:
-		case ByteCodes::if_icmple:
-		case ByteCodes::if_icmpge:
-
+			return ConstType::create(TypeTags::INT,toString<jint>(strToNum<jint>(left->str)>>>strToNum<jint>(right->str)));
+		case ByteCodes::if_icmpeq://==
+			return ConstType::create(TypeTags::BOOLEAN,toString<jboolean>(strToNum<jint>(left->str)==strToNum<jint>(right->str)));
+		case ByteCodes::if_icmpne://!=
+			return ConstType::create(TypeTags::BOOLEAN,toString<jboolean>(strToNum<jint>(left->str)!=strToNum<jint>(right->str)));
+		case ByteCodes::if_icmplt://<
+			return ConstType::create(TypeTags::BOOLEAN,toString<jboolean>(strToNum<jint>(left->str)<strToNum<jint>(right->str)));
+		case ByteCodes::if_icmpgt://>
+			return ConstType::create(TypeTags::BOOLEAN,toString<jboolean>(strToNum<jint>(left->str)>strToNum<jint>(right->str)));
+		case ByteCodes::if_icmple://<=
+			return ConstType::create(TypeTags::BOOLEAN,toString<jboolean>(strToNum<jint>(left->str)<=strToNum<jint>(right->str)));
+		case ByteCodes::if_icmpge://>=
+			return ConstType::create(TypeTags::BOOLEAN,toString<jboolean>(strToNum<jint>(left->str)>=strToNum<jint>(right->str)));
+		case ByteCodes::ladd:
+			return ConstType::create(TypeTags::LONG,toString<jlong>(strToNum<jlong>(left->str)+strToNum<jlong>(right->str)));
+		case ByteCodes::lsub:
+			return ConstType::create(TypeTags::LONG,toString<jlong>(strToNum<jlong>(left->str)-strToNum<jlong>(right->str)));
+		case ByteCodes::lmul:
+			return ConstType::create(TypeTags::LONG,toString<jlong>(strToNum<jlong>(left->str)*strToNum<jlong>(right->str)));
+		case ByteCodes::ldiv:
+			return ConstType::create(TypeTags::LONG,toString<jlong>(strToNum<jlong>(left->str)/strToNum<jlong>(right->str)));
+		case ByteCodes::lmod:
+			return ConstType::create(TypeTags::LONG,toString<jlong>(strToNum<jlong>(left->str)%strToNum<jlong>(right->str)));
+		case ByteCodes::land:
+			return ConstType::create(TypeTags::LONG,toString<jlong>(strToNum<jlong>(left->str)&strToNum<jlong>(right->str)));
+		case ByteCodes::lor:
+			return ConstType::create(TypeTags::LONG,toString<jlong>(strToNum<jlong>(left->str)|strToNum<jlong>(right->str)));
+		case ByteCodes::lxor:
+			return ConstType::create(TypeTags::LONG,toString<jlong>(strToNum<jlong>(left->str)^strToNum<jlong>(right->str)));
+		case ByteCodes::lshl:
+			return ConstType::create(TypeTags::LONG,toString<jlong>(strToNum<jlong>(left->str)<<strToNum<jlong>(right->str)));
+		case ByteCodes::lshr:
+			return ConstType::create(TypeTags::LONG,toString<jlong>(strToNum<jlong>(left->str)>>strToNum<jlong>(right->str)));
+		case ByteCodes::lushr:
+			return ConstType::create(TypeTags::LONG,toString<jlong>(strToNum<jlong>(left->str)>>>strToNum<jlong>(right->str)));
+//		case ByteCodes::lcmp:
+		case ByteCodes::fadd:
+			return ConstType::create(TypeTags::FLOAT,toString<jdouble>(strToNum<jfloat>(left->str)+strToNum<jfloat>(right->str)));
+		case ByteCodes::fsub:
+			return ConstType::create(TypeTags::FLOAT,toString<jdouble>(strToNum<jfloat>(left->str)-strToNum<jfloat>(right->str)));
+		case ByteCodes::fmul:
+			return ConstType::create(TypeTags::FLOAT,toString<jdouble>(strToNum<jfloat>(left->str)*strToNum<jfloat>(right->str)));
+		case ByteCodes::fdiv:
+			return ConstType::create(TypeTags::FLOAT,toString<jdouble>(strToNum<jfloat>(left->str)/strToNum<jfloat>(right->str)));
+		case ByteCodes::fmod:
+			return ConstType::create(TypeTags::FLOAT,toString<jdouble>(strToNum<jfloat>(left->str)%strToNum<jfloat>(right->str)));
+//		case ByteCodes::fcmpg:
+//		case ByteCodes::fcmpl:
+		case ByteCodes::dadd:
+			return ConstType::create(TypeTags::DOUBLE,toString<jdouble>(strToNum<jdouble>(left->str)+strToNum<jdouble>(right->str)));
+		case ByteCodes::dsub:
+			return ConstType::create(TypeTags::DOUBLE,toString<jdouble>(strToNum<jdouble>(left->str)-strToNum<jdouble>(right->str)));
+		case ByteCodes::dmul:
+			return ConstType::create(TypeTags::DOUBLE,toString<jdouble>(strToNum<jdouble>(left->str)*strToNum<jdouble>(right->str)));
+		case ByteCodes::ddiv:
+			return ConstType::create(TypeTags::DOUBLE,toString<jdouble>(strToNum<jdouble>(left->str)/strToNum<jdouble>(right->str)));
+		case ByteCodes::dmod:
+			return ConstType::create(TypeTags::DOUBLE,toString<jdouble>(strToNum<jdouble>(left->str)%strToNum<jdouble>(right->str)));
 		default:
 			return NULL;
-
-
 
 
 	}
 
 
-	return left;
+	return NULL;
 }
 //Type转换
 Type* ConstFold::coerce(Type* et, Type* tt) {

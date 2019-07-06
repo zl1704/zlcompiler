@@ -29,7 +29,7 @@ public :
 	        dconst_1        = 15,
 	        bipush          = 16,
 	        sipush          = 17,
-	        ldc1            = 18,
+	        ldc1            = 18,//将 int，float 或 String 型常量值从常量池中推送至栈顶
 	        ldc2            = 19,
 	        ldc2w           = 20,
 	        iload           = 21,

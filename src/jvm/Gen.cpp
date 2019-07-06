@@ -23,9 +23,36 @@ Gen::Gen() {
 
 Gen::~Gen() {
 }
+/**
+ * gen method
+ */
+void Gen::genDef(Tree* tree, Env<AttrContext*> env);
+void Gen::genStat(Tree* tree, Env<AttrContext*> env);
+template<class T>
+void Gen::genStats(vector<T> trees, Env<AttrContext*> env);
+void Gen::genArgs(vector<Expression*> trees, vector<Type*> ts);
+/**
+ *	方法代码生成前准备工作
+ *	1.(静态)成员变量初始化和(静态)构造块中代码添加到(静态)构造方法中
+ *	2. 进入各方法生成代码
+ */
+void Gen::genClass(Env<AttrContext*>* env, ClassDecl* cdef){
+
+
+
+}
+
+
+
+
+
+
 
 void Gen::visitTopLevel(CompilationUnit* tree) {
 }
+
+
+
 void Gen::visitClassDef(ClassDecl* tree) {
 }
 void Gen::visitMethodDef(MethodDecl* tree) {

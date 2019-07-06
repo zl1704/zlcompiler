@@ -80,6 +80,11 @@ private :
 	Log* log;
 	Type* methodType;
 	Env<AttrContext*>* attrEnv;
+	CompilationUnit toplevel;
+
+	int nerrs ;
+	int endPositions;
+
 };
 
 #endif /* JVM_GEN_HPP_ */

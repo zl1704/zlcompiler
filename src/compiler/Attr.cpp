@@ -742,6 +742,7 @@ void Attr::visitBinary(Binary* tree) {
 //	cout<<endl;
 	Type* left = chk->checkNonVoid(tree->lhs->pos,
 			attribExpr(tree->lhs, env, Type::noType));
+
 	Type* right = chk->checkNonVoid(tree->rhs->pos,
 			attribExpr(tree->rhs, env, Type::noType));
 	Symbol* opsym = tree->opsym = resolveBinaryOperator(tree->pos, env,
@@ -753,7 +754,8 @@ void Attr::visitBinary(Binary* tree) {
 		owntype=((MethodType*) opsym->type)->restype;
 		int opcode = ((OperatorSymbol*)opsym)->opcode;
 		if(left->isConst()&&right->isConst()){
-
+			Type* ct = cfolder->fold2(opcode,(ConstType*)left,(ConstType*)right);
+			owntype = cfolder->coerce(ct,owntype);
 
 		}
 
