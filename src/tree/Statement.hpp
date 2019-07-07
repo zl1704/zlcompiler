@@ -15,6 +15,7 @@ class Statement :public Tree{
 public:
 	Statement();
 	Statement(int pos):Tree(pos){};
+//	virtual void accept(Visitor* v) =0;
 	virtual ~Statement();
 };
 

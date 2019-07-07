@@ -40,11 +40,12 @@ void Compiler::compile(string fileName){
 	CompilationUnit* unit = parser->parse();
 	vector<CompilationUnit* > units;
 	units.push_back(unit);
-	if(log->getErrNums()>0)
-			return ;
+	//if(log->getErrNums()>0)
+	//		return ;
 	enter->main(units);
 	//第二阶段
 	compile2();
+
 
 	pretty->visitTopLevel(unit);
 
@@ -57,14 +58,15 @@ void Compiler::compile2(){
 		return ;
 	vector<Env<AttrContext*>*> todos = enter->todos;
 	for(int i =0;i<todos.size();i++)
-		attr->attribute(todos.at(i));
+		generate(attr->attribute(todos.at(i)));
+
 
 
 }
 
 void Compiler::generate(Env<AttrContext* >* env){
 	ClassDecl* cdef = env->enclClass;
-//	gen->genClass(env,cdef);
+	gen->genClass(env,cdef);
 
 
 

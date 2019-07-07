@@ -10,10 +10,11 @@
 #include "../util/global.hpp"
 #include "../util/includeGlobal.hpp"
 #include "../tree/Tree.hpp"
+#include "../util/Name.hpp"
 #include "../compiler/Check.hpp"
 /**
  * 代码生成阶段
- * 尚未实现  需根据JVM规范实现
+ * start 2019.7.7
  */
 class Gen: public Visitor {
 public:
@@ -31,6 +32,14 @@ public:
 	template<class T>
 	void genStats(vector<T> trees,Env<AttrContext*> env);
 	void genArgs(vector<Expression*> trees,vector<Type* > ts);
+
+	/**
+	 * other method
+	 */
+	vector<Tree*> fillInitDefs(vector<Tree*> defs,ClassSymbol* csym);
+	void fillMethod(MethodDecl* md ,vector<Statement*> initCode);
+
+
 	/**
 	 * visit method
 	 */

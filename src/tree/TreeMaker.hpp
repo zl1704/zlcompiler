@@ -37,8 +37,8 @@ public :
 		return new ArrayTypeTree(pos,t);
 	}
 
-	static MethodDecl* makeMethodDecl(int pos,Modifiers* mods ,Expression* type,string name,vector<VariableDecl* > params,Block* body){
-		return new MethodDecl(pos,mods,type,name,params,body);
+	static MethodDecl* makeMethodDecl(int pos,Modifiers* mods ,Expression* restype,string name,vector<VariableDecl* > params,Block* body){
+		return new MethodDecl(pos,mods,restype,name,params,body);
 
 	}
 
@@ -57,7 +57,9 @@ public :
 	static Assign*  makeAssign(int pos,Expression* lhs,Expression* rhs){
 		return new Assign(pos,lhs,rhs);
 	}
-
+	static Statement*  makeAssignment(int pos,Symbol* s,Expression* rhs){
+			return makeExec(pos,makeAssign(pos,(makeIdent(pos,s)),rhs));
+	}
 	static AssignOp* makeAssignOp(int pos,int opcode,Expression* lhs,Expression* rhs){
 		return new AssignOp(pos,opcode,lhs,rhs);
 	}
@@ -97,6 +99,12 @@ public :
 
 	static Ident* makeIdent(int pos,string name){
 		return new Ident(pos,name);
+	}
+	static Ident* makeIdent(int pos,Symbol* s){
+		Ident* ident = new Ident(pos,s->name);
+		ident->sym = s;
+		ident->type = s->type;
+		return ident;
 	}
 
 	static MethodInvocation* makeApply(int pos,Expression* meth,vector<Expression* > args){

@@ -268,8 +268,13 @@ public :
 	        TypeCodeCount   = 9;
 
 	    static  string typecodeNames[];
+	    static string mnem[ByteCodeCount];
 
+	    static string getCodeStr(int opcode){return mnem[opcode];}
 };
+
+
+
 
 
 #endif /* JVM_BYTECODES_HPP_ */

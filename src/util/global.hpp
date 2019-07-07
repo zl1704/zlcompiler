@@ -50,10 +50,10 @@ template<typename T> T strToNum(string str) {
 //
 //}
 template<class T, class R>
-void appendList(vector<T>& from, vector<R> to) {
-	int size = to.size();
+void appendList(vector<T>& src, vector<R> data) {
+	int size = data.size();
 	for (int i = 0; i < size; i++) {
-		from.push_back(to.at(i));
+		src.push_back(data.at(i));
 	}
 }
 ;

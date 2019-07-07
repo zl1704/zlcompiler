@@ -248,6 +248,10 @@ void Enter::visitClassDef(ClassDecl* tree) {
 			tree->defs.insert(tree->defs.begin(), t);
 		}
 
+		//为每个构造方法第一行添加super()
+		//...
+
+		//
 		for (int i = 0; i < tree->defs.size(); i++)
 			memberEnter(tree->defs.at(i), localEnv);
 		result = NULL;

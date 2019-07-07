@@ -8,6 +8,7 @@
 
 string Name::error = "error";
 string Name::init = "<init>";
+string Name::cinit = "<cinit>";
 string Name::_this = "this";
 string Name::super = "super";
 string Name::hyphen = "-";

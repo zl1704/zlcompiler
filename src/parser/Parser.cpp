@@ -1294,7 +1294,8 @@ Expression* Parser::literal(string prefix, int pos) {
 		t = TreeMaker::makeLiteral(pos, TypeTags::CHAR, L->getToken()->name);
 		break;
 	case Token::STRINGLITERAL:
-		t = TreeMaker::makeLiteral(pos, TypeTags::CLASS, L->getToken()->name);
+//		t = TreeMaker::makeLiteral(pos, TypeTags::CLASS, L->getToken()->name);
+		t = TreeMaker::makeLiteral(pos, TypeTags::STRING, L->getToken()->name);
 		break;
 	case Token::TRUE:
 	case Token::FALSE:

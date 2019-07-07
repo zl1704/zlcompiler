@@ -680,7 +680,7 @@ void Attr::visitParens(Parens* tree) {
 	result = check(tree, owntype, pt, pkind, pkind, "类型错误");
 }
 /**
- *    ！！赋值操作 类型暂时没做兼容性检查
+ *
  */
 void Attr::visitAssign(Assign* tree) {
 

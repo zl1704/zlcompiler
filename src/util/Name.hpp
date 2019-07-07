@@ -12,6 +12,7 @@ class Name {
 public:
 	static string error;
 	static string init;
+	static string cinit;
 	static string _this;
 	static string super;
 	static string _class;
