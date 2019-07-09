@@ -66,9 +66,8 @@ vector<T> ListOf(T t) {
 }
 
 
-
-
-
 }
+
+
 
 #endif /* UTIL_GLOBAL_HPP_ */

@@ -7,6 +7,9 @@
 //============================================================================
 
 #include "compiler/Compiler.hpp"
+#include "test/test.h"
+
+
  int main(int argc,char *argv[]){
 //    ios_base::sync_with_stdio(false);
 //	string fileName("E:/workspace/c++/zlcompiler/src/test/test.zl");
@@ -16,11 +19,9 @@
 //		cout<<"没有输入文件";
 //		return 0;
 //	}
-	//7.5_start test
-	Compiler* complier =  Compiler::instance();
-	complier->compile(fileName);
-
-
+//	Compiler* complier =  Compiler::instance();
+//	complier->compile(fileName);
+//	testmap();
 	return 0;
 }
 

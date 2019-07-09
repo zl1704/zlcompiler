@@ -27,10 +27,10 @@ public:
 	 * gen method
 	 */
 	void genClass(Env<AttrContext*>* env,ClassDecl* cdef);
-	void genDef(Tree* tree,Env<AttrContext*> env);
-	void genStat(Tree* tree,Env<AttrContext*> env);
+	void genDef(Tree* tree,Env<AttrContext*>* env);
+	void genStat(Tree* tree,Env<AttrContext*>* env);
 	template<class T>
-	void genStats(vector<T> trees,Env<AttrContext*> env);
+	void genStats(vector<T> trees,Env<AttrContext*>* env);
 	void genArgs(vector<Expression*> trees,vector<Type* > ts);
 
 	/**

@@ -26,10 +26,10 @@ Gen::~Gen() {
 /**
  * gen method
  */
-void Gen::genDef(Tree* tree, Env<AttrContext*> env){}
-void Gen::genStat(Tree* tree, Env<AttrContext*> env){}
+void Gen::genDef(Tree* tree, Env<AttrContext*>* env){}
+void Gen::genStat(Tree* tree, Env<AttrContext*>* env){}
 template<class T>
-void Gen::genStats(vector<T> trees, Env<AttrContext*> env){}
+void Gen::genStats(vector<T> trees, Env<AttrContext*>* env){}
 void Gen::genArgs(vector<Expression*> trees, vector<Type*> ts){}
 /**
  *	方法代码生成前准备工作
@@ -41,6 +41,10 @@ void Gen::genClass(Env<AttrContext*>* env, ClassDecl* cdef){
 	//defs只剩方法，在write阶段变量从 classsym中符号表中找
 	cdef->defs = fillInitDefs(cdef->defs,cdef->sym);
 
+	for(int i = 0;i<cdef->defs.size();i++){
+		genDef(cdef->defs[i],env);
+
+	}
 
 
 }
