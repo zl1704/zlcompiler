@@ -12,10 +12,29 @@
 #include "../tree/Tree.hpp"
 #include "../util/Name.hpp"
 #include "../compiler/Check.hpp"
+#include "Code.hpp"
 /**
  * 代码生成阶段
  * start 2019.7.7
  */
+
+class GenContext{
+public:
+	//当前环境exit
+	Chain* exit;
+	//当前环境continue
+	Chain* cont;
+	bool isSwitch;
+
+	GenContext();
+
+
+	void addExit(Chain* c);
+	void addCont(Chain* c);
+
+};
+
+
 class Gen: public Visitor {
 public:
 	static int* genKey ;
@@ -24,13 +43,16 @@ public:
 	virtual ~Gen();
 
 	/**
-	 * gen method
+	 * gen methods
 	 */
 	void genClass(Env<AttrContext*>* env,ClassDecl* cdef);
-	void genDef(Tree* tree,Env<AttrContext*>* env);
-	void genStat(Tree* tree,Env<AttrContext*>* env);
+	void genMethod(MethodDecl* md,Env<GenContext*>* env);
+	int initCode(MethodDecl* md,Env<GenContext*>* env);
+
+	void genDef(Tree* tree,Env<GenContext*>* env);
+	void genStat(Tree* tree,Env<GenContext*>* env);
 	template<class T>
-	void genStats(vector<T> trees,Env<AttrContext*>* env);
+	void genStats(vector<T> trees,Env<GenContext*>* env);
 	void genArgs(vector<Expression*> trees,vector<Type* > ts);
 
 	/**
@@ -38,6 +60,9 @@ public:
 	 */
 	vector<Tree*> fillInitDefs(vector<Tree*> defs,ClassSymbol* csym);
 	void fillMethod(MethodDecl* md ,vector<Statement*> initCode);
+
+
+
 
 
 	/**
@@ -91,9 +116,18 @@ private :
 	Env<AttrContext*>* attrEnv;
 	CompilationUnit toplevel;
 
+	// set by genMethod
+	Code* code;
+	Env<GenContext*>* env;
+	Type* pt;
+	Pool* pool;
+
+
 	int nerrs ;
 	int endPositions;
 
 };
+
+
 
 #endif /* JVM_GEN_HPP_ */

@@ -19,8 +19,8 @@
 //		cout<<"没有输入文件";
 //		return 0;
 //	}
-//	Compiler* complier =  Compiler::instance();
-//	complier->compile(fileName);
+	Compiler* complier =  Compiler::instance();
+	complier->compile(fileName);
 //	testmap();
 	return 0;
 }

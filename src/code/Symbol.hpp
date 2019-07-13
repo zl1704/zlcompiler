@@ -13,9 +13,11 @@
 #include "Type.hpp"
 #include "../code/Scope.hpp"
 #include "../code/Kinds.hpp"
+
 class Completer;
 class Type;
 class Scope;
+class Code;
 /**
  * 符号类
  */
@@ -116,13 +118,15 @@ class MethodSymbol: public Symbol {
 public:
 	vector<VarSymbol*> params;
 	vector<string> savedParamNames;
+	Code* code;
 	MethodSymbol(long long flags, string name, Type* type, Symbol* owner) :
 			Symbol(Kinds::MTH, flags, name, type, owner) {
+		code = NULL;
 
 	}
 	inline MethodSymbol* clone(Symbol* newOwner) {
 		MethodSymbol* m = new MethodSymbol(flags_field, name, type, newOwner);
-//		            m->code = code;
+		m->code = code;
 		return m;
 	}
 };

@@ -26,11 +26,57 @@ Gen::~Gen() {
 /**
  * gen method
  */
-void Gen::genDef(Tree* tree, Env<AttrContext*>* env){}
-void Gen::genStat(Tree* tree, Env<AttrContext*>* env){}
+void Gen::genDef(Tree* tree, Env<GenContext*>* env){
+	Env<GenContext*>* preEnv = this->env;
+	this->env = env;
+	tree->accept(this);
+	this->env = preEnv;
+
+
+}
+void Gen::genStat(Tree* tree, Env<GenContext*>* env){
+
+
+}
 template<class T>
-void Gen::genStats(vector<T> trees, Env<AttrContext*>* env){}
+void Gen::genStats(vector<T> trees, Env<GenContext*>* env){
+
+	for(int i = 0;i<trees.size();i++)
+		genStat(trees[i],env);
+
+}
 void Gen::genArgs(vector<Expression*> trees, vector<Type*> ts){}
+
+/**
+ * 生成code
+ *
+ */
+void Gen::genMethod(MethodDecl* md,Env<GenContext*>* env){
+
+	int startpc = initCode(md,env);
+
+
+
+
+}
+
+
+/**
+ * 准备code数据
+ * this ， 参数变量，入口pc
+ */
+int Gen::initCode(MethodDecl* md,Env<GenContext*>* env){
+
+	md->sym->code = code = new Code(md->sym,pool);
+
+
+
+	//没有附加信息，start从0开始
+	int startpc = 0;
+	return startpc;
+
+}
+
 /**
  *	方法代码生成前准备工作
  *	1.(静态)成员变量初始化和(静态)构造块中代码添加到(静态)构造方法中
@@ -39,10 +85,12 @@ void Gen::genArgs(vector<Expression*> trees, vector<Type*> ts){}
 void Gen::genClass(Env<AttrContext*>* env, ClassDecl* cdef){
 
 	//defs只剩方法，在write阶段变量从 classsym中符号表中找
-	cdef->defs = fillInitDefs(cdef->defs,cdef->sym);
 
+	cdef->defs = fillInitDefs(cdef->defs,cdef->sym);
+	Env<GenContext*> * localEnv = new Env<GenContext*>(cdef,new GenContext());
+	pool = new Pool();
 	for(int i = 0;i<cdef->defs.size();i++){
-		genDef(cdef->defs[i],env);
+		genDef(cdef->defs[i],localEnv);
 
 	}
 
@@ -165,8 +213,15 @@ void Gen::visitTopLevel(CompilationUnit* tree) {
 
 
 void Gen::visitClassDef(ClassDecl* tree) {
+
 }
+
 void Gen::visitMethodDef(MethodDecl* tree) {
+	Env<GenContext*> * localEnv = env->dup(tree);
+	localEnv->enclMethod = tree;
+	this->pt = ((MethodType*)(tree->sym->type))->restype;
+	genMethod(tree,localEnv);
+
 }
 void Gen::visitVarDef(VariableDecl* tree) {
 }
@@ -234,3 +289,29 @@ void Gen::visitModifiers(Modifiers* tree) {
 }
 void Gen::visitTree(Tree* tree) {
 }
+
+
+/**
+ * GenContext
+ */
+
+GenContext::GenContext(){
+
+	exit = NULL;
+	cont = NULL;
+	isSwitch = false;
+
+}
+
+
+void GenContext::addExit(Chain* c){
+	exit = Chain::merge(c,exit);
+}
+void GenContext::addCont(Chain* c){
+	cont = Chain::merge(c,cont);
+}
+
+
+
+
+

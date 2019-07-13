@@ -9,7 +9,7 @@
 #define JVM_CODE_HPP_
 #include "../util/global.hpp"
 #include "../util/includeGlobal.hpp"
-
+#include "Pool.hpp"
 class Code;
 
 /**
@@ -33,12 +33,27 @@ private :
 class Code{
 public:
 	jbyte* code;
+	int size ;
 	int cp;
-
-	Code();
-
-private :
 	LocalVar** lvs;
+	int lvsize;
+	MethodSymbol* msym;
+	Symtab* syms;
+	Pool* pool;
+	Code(MethodSymbol* sym,Pool* pool){
+		syms = sym;
+		this->pool = pool;
+		code = new jbyte[64];
+		size = 64;
+		lvs = new LocalVar[20];
+		lvsize = 20;
+	}
+	void checkCode();
+	//byte short  char int ---> int
+	static int truncate(int tc);
+	//对象长度
+	int witdh(int tc);
+
 
 
 };
@@ -50,9 +65,9 @@ class Chain{
 public:
 	int pc;
 	Chain *next;
-	Chain(int pc,Chain next);
+	Chain(int pc,Chain* next);
 	//合并两个跳转链
-	static Chain merge(Chain c1,Chain c2);
+	static Chain* merge(Chain* c1,Chain* c2);
 
 };
 
