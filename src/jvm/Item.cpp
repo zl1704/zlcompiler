@@ -16,7 +16,12 @@ Item* Item::coerce(int targetcode){
 		return this;
 	else{
 		load();
+		int typec = Code::truncate(typecode);
+		int targetc = Code::truncate(targetcode);
+		if(typec!=targetc){
+			int offset = targetc>typec?targetc-1:typec;
 
+		}
 
 	}
 

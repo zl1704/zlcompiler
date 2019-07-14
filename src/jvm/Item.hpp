@@ -8,13 +8,17 @@
 #ifndef JVM_ITEM_HPP_
 #define JVM_ITEM_HPP_
 #include "ByteCodes.hpp"
+#include "Code.hpp"
+
 /**
  * 代码生成中的一些东西，例如局部变量，栈中对象，静态变量，成员变量和方法，立即数常量，条件跳转
  */
 class Item{
+
 public:
 	int typecode;
-	Item(int typecode){
+	Code* code;
+	Item(int typecode,Code* code){
 		this->typecode = typecode;
 	}
 
@@ -23,6 +27,7 @@ public:
 	virtual void  invoke();
 	virtual void  duplicate();
 	virtual void  drop();
+	virtual void stash(int toscode);
 	virtual Item* coerce(int targetcode);
 	Item* coerce(Type* targettype);
 
@@ -30,39 +35,158 @@ public:
 };
 
 class StackItem:Item{
-
+public:
+	StackItem(int typecode,Code* code):Item(typecode,code){}
+	virtual Item* load();
+    virtual void  store();
+    virtual void  invoke();
+	virtual void  duplicate();
+	virtual void  drop();
+	virtual void stash(int toscode);
+	virtual Item* coerce(int targetcode);
+	Item* coerce(Type* targettype);
 };
 
 class IndexedItem:Item{
 
-
+public:
+	IndexedItem(Type* type,Code* code):Item(ByteCodes::typecode(type),code){}
+	virtual Item* load();
+	virtual void  store();
+	virtual void  invoke();
+	virtual void  duplicate();
+	virtual void  drop();
+	virtual void stash(int toscode);
+	virtual Item* coerce(int targetcode);
+	Item* coerce(Type* targettype);
 };
 
 class SelfItem:Item{
 public:
 	bool isSuper;
-	SelfItem(bool isSpuer):Item(ByteCodes::OBJECTcode){
+	SelfItem(bool isSpuer,Code* code):Item(ByteCodes::OBJECTcode,Code* code){
 		this->isSuper = isSuper;
 	}
-
+	virtual Item* load();
+	virtual void  store();
+	virtual void  invoke();
+	virtual void  duplicate();
+	virtual void  drop();
+	virtual void stash(int toscode);
+	virtual Item* coerce(int targetcode);
+	Item* coerce(Type* targettype);
 
 };
 
 class LocalItem:Item{
-
+public:
+	int reg;
+	Type* type;
+	LocalItem(Type* type,int reg,Code* code):Item(ByteCodes::typecode(type),code){
+		this->type = type;
+		this->reg = reg;
+	}
+	virtual Item* load();
+	virtual void  store();
+	virtual void  invoke();
+	virtual void  duplicate();
+	virtual void  drop();
+	virtual void stash(int toscode);
+	virtual Item* coerce(int targetcode);
+	Item* coerce(Type* targettype);
 
 };
+/**
+ * 静态变量 或 方法
+ */
 class StaticItem:Item{
 
+public:
+	Symbol* member;
+	StaticItem(Symbol* member,Code* code):Item(ByteCodes::typecode(member->type),code){
+		this->member = member;
+	}
+	virtual Item* load();
+	virtual void  store();
+	virtual void  invoke();
+	virtual void  duplicate();
+	virtual void  drop();
+	virtual void stash(int toscode);
+	virtual Item* coerce(int targetcode);
+	Item* coerce(Type* targettype);
+};
+/**
+ * 实例变量或方法
+ */
+class Member :Item{
+public:
+	Symbol* member;
+	Member(Symbol* member,Code* code):Item(ByteCodes::typecode(member->type),code){
+		this->member = member;
+	}
+	virtual Item* load();
+	virtual void  store();
+	virtual void  invoke();
+	virtual void  duplicate();
+	virtual void  drop();
+	virtual void stash(int toscode);
+	virtual Item* coerce(int targetcode);
+	Item* coerce(Type* targettype);
 };
 
-class Member :Item{};
+class ImmediateItem :Item{
+public:
+	Literal * literal;
+	ImmediateItem(Type* type,Literal* literal,Code* code):Item(ByteCodes::typecode(type),code){
+		this->literal = literal;
+	}
+	virtual Item* load();
+	virtual void  store();
+	virtual void  invoke();
+	virtual void  duplicate();
+	virtual void  drop();
+	virtual void stash(int toscode);
+	virtual Item* coerce(int targetcode);
+	Item* coerce(Type* targettype);
+};
 
-class ImmediateItem :Item{};
+class AssinItem: Item{
+public:
+	//左值
+	Item* lhs;
+	AssinItem(Item* lhs,Code* code):Item(lhs->typecode,code){
+		this->lhs = lhs;
+	}
+	virtual Item* load();
+	virtual void  store();
+	virtual void  invoke();
+	virtual void  duplicate();
+	virtual void  drop();
+	virtual void stash(int toscode);
+	virtual Item* coerce(int targetcode);
+	Item* coerce(Type* targettype);
+};
 
-class AssinItem: Item{};
-
-class CondItem:Item{};
+class CondItem:Item{
+public:
+	Tree * tree;
+	int opcode;
+	Chain* trueJumps;
+	Chain* falseJumps;
+	CondItem(int opcode,Chain* tureJumps,Chain* falseJumps,Code* code){
+		this->typecode = ByteCodes::BYTEcode;
+		this->trueJumps = trueJumps;
+		this->opcode = opcode;
+	}
+	virtual Item* load();
+	virtual void  store();
+	virtual void  invoke();
+	virtual void  duplicate();
+	virtual void  drop();
+	virtual void stash(int toscode);
+	virtual Item* coerce(int targetcode);
+	Item* coerce(Type* targettype);
+};
 
 
 class Items{
@@ -72,13 +196,21 @@ public:
 	Items(Pool* pool,Code* code){
 		this->pool = pool;
 		this->code =code;
-		voidItem = new Item(ByteCodes::VOIDcode);
+		voidItem = new Item(ByteCodes::VOIDcode,code);
 		thisItem = new SelfItem(false);
 		superItem = new SelfItem(true);
-		for (int i = 0; i < ByteCodes::VOIDcode; i++) stackItem[i] = new StackItem(i);
+		for (int i = 0; i < ByteCodes::VOIDcode; i++) stackItem[i] = new StackItem(i,code);
 		stackItem[ByteCodes::VOIDcode] = voidItem;
 
 	}
+
+	//make Item
+
+	Item* makeStaticItem(Symbol* member){
+		return new StaticItem(member,code);
+	}
+
+
 private :
 	Item* voidItem;
 	Item* thisItem;
