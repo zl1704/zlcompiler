@@ -8,7 +8,12 @@
 #include "Gen.hpp"
 int* Gen::genKey = new int ;
 Gen* Gen::instance(){
-
+	Gen* gen = (Gen*)Context::get(genKey);
+	if(gen == NULL){
+		gen = new Gen();
+		Context::put(genKey,gen);
+	}
+	return gen;
 }
 
 
@@ -17,8 +22,15 @@ Gen::Gen() {
 	 log = Log::instance();
 	 syms = Symtab::instance();
 	 chk = Check::instance();
-
-
+	 attrEnv = NULL;
+	 toplevel = NULL;
+	 methodType = NULL;
+	 code = NULL;
+	 env = NULL;
+	 pt = NULL;
+	 pool = NULL;
+	 nerrs = 0;
+	 endPositions = 0;
 }
 
 Gen::~Gen() {
@@ -54,7 +66,7 @@ void Gen::genArgs(vector<Expression*> trees, vector<Type*> ts){}
 void Gen::genMethod(MethodDecl* md,Env<GenContext*>* env){
 
 	int startpc = initCode(md,env);
-
+	genStat(md->body,env);
 
 
 
@@ -70,8 +82,17 @@ int Gen::initCode(MethodDecl* md,Env<GenContext*>* env){
 	md->sym->code = code = new Code(md->sym,pool);
 
 	//给非静态方法添加this和参数到局部变量表中
+	//此方法为非静态方法，构造函数为非静态方法
+	if(md->sym->flags_field&Flags::STATIC==0){
 
-
+		code->setDefined(code->addLocalVar(new VarSymbol(Flags::FINAL,Name::_this,md->sym->owner->type,md->sym->owner)));
+	}
+	//添加参数到局部变量表中
+	for(int i = 0;i<md->params.size();i++){
+		VariableDecl* v = params[i];
+		code->setDefined(code->newLocalVar(v->sym));
+	}
+	code->markAlive();
 	//没有附加信息，start从0开始
 	int startpc = 0;
 	return startpc;

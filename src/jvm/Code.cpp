@@ -122,10 +122,25 @@ void State::forceStackTop(Type* t) {
 	}
 
 }
+State* State::join(State* other){
+
+	return this;
+}
+
 
 /**
  * Code
  */
+bool Code::isAlive(){
+	return alive&& pendingJumps!=NULL;
+}
+inline void Code::markAlive(){
+	alive = true;
+}
+inline void Code::markDead(){
+	alive = false;
+}
+
 
 int Code::truncate(int tc) {
 	switch (tc) {

@@ -114,7 +114,7 @@ private :
 	Log* log;
 	Type* methodType;
 	Env<AttrContext*>* attrEnv;
-	CompilationUnit toplevel;
+	CompilationUnit* toplevel;
 
 	// set by genMethod
 	Code* code;

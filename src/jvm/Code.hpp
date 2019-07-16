@@ -170,6 +170,9 @@ public:
 	void setUnDefined(int adr);
 	void endScope(int adr);
 
+	bool isAlive();
+	void markAlive();
+	void markDead();
 
 };
 
