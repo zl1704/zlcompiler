@@ -69,6 +69,7 @@ int Gen::initCode(MethodDecl* md,Env<GenContext*>* env){
 
 	md->sym->code = code = new Code(md->sym,pool);
 
+	//给非静态方法添加this和参数到局部变量表中
 
 
 	//没有附加信息，start从0开始

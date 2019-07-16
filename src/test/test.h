@@ -8,6 +8,7 @@
 #ifndef TEST_TEST_H_
 #define TEST_TEST_H_
 #include "../util/HashMap.h"
+#include "../util/Bits.hpp"
 #include <iostream>
 using namespace std;
 void testmap(){
@@ -35,6 +36,19 @@ void testmap(){
 //	map->put(comp3,2);
 //	cout << map->get(comp3)<< endl;
 }
+void testBits(){
 
+	Bits* bits = new Bits();
+	if(!bits->alive)
+		cout << "false"<<endl;
+//	cout << bits->isMember(5)<<endl;
+//	bits->include(5);
+//	cout << bits->isMember(5)<<endl;
+//	cout << bits->isMember(55)<<endl;
+//	bits->include(55);
+//	cout << bits->isMember(55)<<endl;
+//	bits->exclude(55);
+//	cout << bits->isMember(55)<<endl;
 
+}
 #endif /* TEST_TEST_H_ */

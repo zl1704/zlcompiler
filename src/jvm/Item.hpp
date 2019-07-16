@@ -18,8 +18,10 @@ class Item{
 public:
 	int typecode;
 	Code* code;
+	Item(){}
 	Item(int typecode,Code* code){
 		this->typecode = typecode;
+		this->code = code;
 	}
 
 	virtual Item* load();
@@ -34,7 +36,7 @@ public:
 	int width();
 };
 
-class StackItem:Item{
+class StackItem:public Item{
 public:
 	StackItem(int typecode,Code* code):Item(typecode,code){}
 	virtual Item* load();
@@ -45,9 +47,10 @@ public:
 	virtual void stash(int toscode);
 	virtual Item* coerce(int targetcode);
 	Item* coerce(Type* targettype);
+	int width();
 };
 
-class IndexedItem:Item{
+class IndexedItem:public Item{
 
 public:
 	IndexedItem(Type* type,Code* code):Item(ByteCodes::typecode(type),code){}
@@ -59,12 +62,13 @@ public:
 	virtual void stash(int toscode);
 	virtual Item* coerce(int targetcode);
 	Item* coerce(Type* targettype);
+	int width();
 };
 
-class SelfItem:Item{
+class SelfItem:public Item{
 public:
 	bool isSuper;
-	SelfItem(bool isSpuer,Code* code):Item(ByteCodes::OBJECTcode,Code* code){
+	SelfItem(bool isSpuer,Code* code):Item(ByteCodes::OBJECTcode,code){
 		this->isSuper = isSuper;
 	}
 	virtual Item* load();
@@ -75,10 +79,11 @@ public:
 	virtual void stash(int toscode);
 	virtual Item* coerce(int targetcode);
 	Item* coerce(Type* targettype);
+	int width();
 
 };
 
-class LocalItem:Item{
+class LocalItem:public Item{
 public:
 	int reg;
 	Type* type;
@@ -94,12 +99,13 @@ public:
 	virtual void stash(int toscode);
 	virtual Item* coerce(int targetcode);
 	Item* coerce(Type* targettype);
+	int width();
 
 };
 /**
  * 静态变量 或 方法
  */
-class StaticItem:Item{
+class StaticItem:public Item{
 
 public:
 	Symbol* member;
@@ -114,14 +120,15 @@ public:
 	virtual void stash(int toscode);
 	virtual Item* coerce(int targetcode);
 	Item* coerce(Type* targettype);
+	int width();
 };
 /**
  * 实例变量或方法
  */
-class Member :Item{
+class MemberItem :public Item{
 public:
 	Symbol* member;
-	Member(Symbol* member,Code* code):Item(ByteCodes::typecode(member->type),code){
+	MemberItem(Symbol* member,Code* code):Item(ByteCodes::typecode(member->type),code){
 		this->member = member;
 	}
 	virtual Item* load();
@@ -132,9 +139,10 @@ public:
 	virtual void stash(int toscode);
 	virtual Item* coerce(int targetcode);
 	Item* coerce(Type* targettype);
+	int width();
 };
 
-class ImmediateItem :Item{
+class ImmediateItem :public Item{
 public:
 	Literal * literal;
 	ImmediateItem(Type* type,Literal* literal,Code* code):Item(ByteCodes::typecode(type),code){
@@ -148,9 +156,10 @@ public:
 	virtual void stash(int toscode);
 	virtual Item* coerce(int targetcode);
 	Item* coerce(Type* targettype);
+	int width();
 };
 
-class AssinItem: Item{
+class AssinItem:public Item{
 public:
 	//左值
 	Item* lhs;
@@ -165,9 +174,10 @@ public:
 	virtual void stash(int toscode);
 	virtual Item* coerce(int targetcode);
 	Item* coerce(Type* targettype);
+	int width();
 };
 
-class CondItem:Item{
+class CondItem:public Item{
 public:
 	Tree * tree;
 	int opcode;
@@ -186,6 +196,7 @@ public:
 	virtual void stash(int toscode);
 	virtual Item* coerce(int targetcode);
 	Item* coerce(Type* targettype);
+	int width();
 };
 
 
@@ -197,8 +208,8 @@ public:
 		this->pool = pool;
 		this->code =code;
 		voidItem = new Item(ByteCodes::VOIDcode,code);
-		thisItem = new SelfItem(false);
-		superItem = new SelfItem(true);
+		thisItem = new SelfItem(false,code);
+		superItem = new SelfItem(true,code);
 		for (int i = 0; i < ByteCodes::VOIDcode; i++) stackItem[i] = new StackItem(i,code);
 		stackItem[ByteCodes::VOIDcode] = voidItem;
 
@@ -206,10 +217,32 @@ public:
 
 	//make Item
 
+	Item* makeStackItem(Type* type){
+		return stackItem[ByteCodes::typecode(type)];
+	}
+
+	Item* makeLocalItem(VarSymbol* v){
+		return new LocalItem(v->type,v->adr,code);
+	}
 	Item* makeStaticItem(Symbol* member){
 		return new StaticItem(member,code);
 	}
 
+	Item* makeMemberItem(Symbol* s){
+		return new MemberItem(s,code);
+	}
+
+	Item* makeImmediateItem(Type* type,Literal* literal){
+		return new ImmediateItem(type,literal,code);
+	}
+
+	Item* makeAssinItem(Item* lhs){
+		return new AssinItem(lhs,code);
+	}
+
+	Item* makeCondItem(int opcode,Chain* trueJumps,Chain* falseJumps){
+		return new CondItem(opcode,trueJumps,falseJumps,code);
+	}
 
 private :
 	Item* voidItem;

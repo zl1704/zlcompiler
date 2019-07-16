@@ -59,7 +59,7 @@ private :
 	HashMap<void*,int>* map;
 
 	void dble(){
-		void* new_pool = new void*[size*2];
+		void** new_pool = new void*[size*2];
 		memcpy(new_pool,pool,size*sizeof(void*));
 		delete[] pool;
 		pool = new_pool;

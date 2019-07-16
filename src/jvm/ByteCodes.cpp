@@ -224,6 +224,38 @@ string ByteCodes::mnem[] ={
 		"breakpoint"
 };
 
+int ByteCodes::typecode(Type* type) {
 
+	switch (type->tag) {
+	case TypeTags::BYTE:
+		return BYTEcode;
+	case TypeTags::SHORT:
+		return SHORTcode;
+	case TypeTags::CHAR:
+		return CHARcode;
+	case TypeTags::INT:
+		return INTcode;
+	case TypeTags::LONG:
+		return LONGcode;
+	case TypeTags::FLOAT:
+		return FLOATcode;
+	case TypeTags::DOUBLE:
+		return DOUBLEcode;
+	case TypeTags::BOOLEAN:
+		return BYTEcode;
+	case TypeTags::VOID:
+		return VOIDcode;
+	case TypeTags::CLASS:
+	case TypeTags::ARRAY:
+	case TypeTags::METHOD:
+	case TypeTags::BOT:
+	case TypeTags::TYPEVAR:
+		//  case TypeTags::UNINITIALIZED_THIS:
+		//  case TypeTags::UNINITIALIZED_OBJECT:
+		return OBJECTcode;
+	default:
+		return -1;
+	}
+}
 
 

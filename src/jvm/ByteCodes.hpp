@@ -9,6 +9,8 @@
 #define JVM_BYTECODES_HPP_
 #include "../util/global.hpp"
 #include "../code/TypeTags.hpp"
+#include "../code/Type.hpp"
+class Type;
 class ByteCodes{
 public :
 	static const int illegal         = -1,
@@ -272,30 +274,7 @@ public :
 	    static string mnem[ByteCodeCount];
 
 	    static string getCodeStr(int opcode){return mnem[opcode];}
-	    static int typecode(Type* type){
-	    	 switch (type->tag) {
-	    	        case TypeTags::BYTE: return BYTEcode;
-	    	        case TypeTags::SHORT: return SHORTcode;
-	    	        case TypeTags::CHAR: return CHARcode;
-	    	        case TypeTags::INT: return INTcode;
-	    	        case TypeTags::LONG: return LONGcode;
-	    	        case TypeTags::FLOAT: return FLOATcode;
-	    	        case TypeTags::DOUBLE: return DOUBLEcode;
-	    	        case TypeTags::BOOLEAN: return BYTEcode;
-	    	        case TypeTags::VOID: return VOIDcode;
-	    	        case TypeTags::CLASS:
-	    	        case TypeTags::ARRAY:
-	    	        case TypeTags::METHOD:
-	    	        case TypeTags::BOT:
-	    	        case TypeTags::TYPEVAR:
-	    	      //  case TypeTags::UNINITIALIZED_THIS:
-	    	      //  case TypeTags::UNINITIALIZED_OBJECT:
-	    	            return OBJECTcode;
-	    	        default:
-	    	        	return -1;
-	    	 }
-
-	    }
+	    static int typecode(Type* type);
 };
 
 

@@ -22,6 +22,7 @@
 	Compiler* complier =  Compiler::instance();
 	complier->compile(fileName);
 //	testmap();
+//	testBits();
 	return 0;
 }
 
