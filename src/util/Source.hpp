@@ -9,15 +9,17 @@
 #define UTIL_SOURCE_HPP_
 #include <stdlib.h>
 #include "global.hpp"
-
+#include "Context.hpp"
 /**
  * 源文件
  */
 
 class Source{
 public:
+
 	Source(){};
 	Source(string fileName);
+	static Source* instance();
 	string getFileName(){return fileName;}
 	vector<char> getSrcBuf(){return *buf;}
 	string getLineStr(int line);
@@ -32,7 +34,7 @@ private :
 	vector<char>* buf; //源文件字符流
 	int* rowbuf; //行号表
 	int* colbuf;
-
+	static int* sourceKey;
 };
 
 

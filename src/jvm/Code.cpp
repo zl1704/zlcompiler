@@ -131,15 +131,26 @@ State* State::join(State* other){
 /**
  * Code
  */
-bool Code::isAlive(){
-	return alive&& pendingJumps!=NULL;
+Code::Code(MethodSymbol* sym,Pool* pool){
+		msym = sym;
+		this->pool = pool;
+		code = new jbyte[64];
+		size = 64;
+		lvs = new LocalVar*[20];
+		lvsize = 20;
+		alive = false;
+		max_locals = 0;
+		max_stack = 0;
+		nextreg = 0;
+		cp = 1;
+		pendingStatPos = -1;
+		syms = Symtab::instance();
+		state = new State(this);
+		pendingJumps = NULL;
+		fixedPc = false;
+		source = Source::instance();
 }
-inline void Code::markAlive(){
-	alive = true;
-}
-inline void Code::markDead(){
-	alive = false;
-}
+
 
 
 int Code::truncate(int tc) {
@@ -189,6 +200,7 @@ void Code::resolvePending() {
 
 }
 void Code::resolve(Chain* c, int target) {
+
 
 }
 
@@ -245,11 +257,61 @@ void Code::setUnDefined(int adr) {
 	if (adr < lvsize && lvs[adr] != NULL && lvs[adr]->start_pc != MAXPC) {
 		LocalVar* v = lvs[adr];
 		int length = curPc() - v->start_pc;
+		if(length>0&&length<MAXPC){
+			v->length = length;
+			//lvs[adr] = NULL; //可以推迟endScope中置NULL
+			//lvs[adr] = v->dup();
+		}else{
+			v->length = MAXPC;
+		}
 	}
 }
 
 void Code::endScope(int adr) {
+
+	LocalVar* v = lvs[adr];
+	if(v!=NULL){
+		lvs[adr] = NULL;
+		if(v->start_pc!=MAXPC){
+			int length = curPc()-v->start_pc;
+			v->length = length;
+		}
+	}
+	state->defined->exclude(adr);
+
 }
+
+void Code::endScopes(int adr){
+	int preNextReg = nextreg;
+	nextreg = adr;
+	for(int i = adr;i<preNextReg;i++)
+		endScope(i);
+
+}
+
+void Code::addLineNumber(int startPc,int lineNumber){
+
+	//lineNumber行已添加的无须再添加
+	if(lineInfo.empty()||lineInfo.back()[1]!=lineNumber){
+		lineInfo.push_back(util::ListOf(startPc,lineNumber));
+	}
+}
+void Code::statBegin(int pos){
+	if(pos!=-1){
+		pendingStatPos = pos;
+	}
+
+}
+void Code::markStatBegin(){
+
+	if(alive){
+		int line = source->getLine(pendingStatPos);
+		addLineNumber(cp,line);
+	}
+	pendingStatPos = -1;
+}
+
+
 
 /**
  *  Chain

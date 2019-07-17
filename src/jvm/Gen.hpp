@@ -13,6 +13,7 @@
 #include "../util/Name.hpp"
 #include "../compiler/Check.hpp"
 #include "Code.hpp"
+#include "Item.hpp"
 /**
  * 代码生成阶段
  * start 2019.7.7
@@ -54,6 +55,9 @@ public:
 	template<class T>
 	void genStats(vector<T> trees,Env<GenContext*>* env);
 	void genArgs(vector<Expression*> trees,vector<Type* > ts);
+	CondItem* genCond(Tree* tree);
+	Item* genExpr(Tree* tree ,Type* pt);
+
 
 	/**
 	 * other method
@@ -121,8 +125,10 @@ private :
 	Env<GenContext*>* env;
 	Type* pt;
 	Pool* pool;
+	Items* items;
 
 
+	Item* result;
 	int nerrs ;
 	int endPositions;
 

@@ -59,7 +59,7 @@ void appendList(vector<T>& src, vector<R> data) {
 ;
 //
 template<typename T>
-vector<T> ListOf(T t) {
+vector<T> ListOf(T t...) {
 	vector<T> vec;
 	vec.push_back(t);
 	return vec;

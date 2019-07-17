@@ -6,6 +6,7 @@
  */
 
 #include "Source.hpp"
+int* Source::sourceKey = new int;
 Source::Source(string fileName) :
 		fileName(fileName) {
 	CharStream cs(fileName);
@@ -15,6 +16,10 @@ Source::Source(string fileName) :
 	this->colbuf = new int[cs.colBuffer.size()];
 	memcpy(this->rowbuf, cs.rowBuffer.data(), 4*cs.rowBuffer.size());
 	memcpy(this->colbuf, cs.colBuffer.data(), 4*cs.colBuffer.size());
+	Context::put(sourceKey,this);
+}
+Source* Source::instance(){
+	return (Source*)Context::get(sourceKey);
 }
 
 string Source::getLineStr(int line) {

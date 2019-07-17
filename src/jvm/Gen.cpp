@@ -29,6 +29,8 @@ Gen::Gen() {
 	 env = NULL;
 	 pt = NULL;
 	 pool = NULL;
+	 items = NULL;
+	 result = NULL;
 	 nerrs = 0;
 	 endPositions = 0;
 }
@@ -47,6 +49,12 @@ void Gen::genDef(Tree* tree, Env<GenContext*>* env){
 
 }
 void Gen::genStat(Tree* tree, Env<GenContext*>* env){
+	if(code->isAlive()){
+		genDef(tree,env);
+	}else if(env->info->isSwitch&&tree->getTag()==Tree::VARDEF){
+		//switch中定义的变量 ， 要在局部变量表中分配位置，c++中是不支持这种语法的
+		code->newLocalVar(((VariableDecl*)tree)->sym);
+	}
 
 
 }
@@ -57,7 +65,31 @@ void Gen::genStats(vector<T> trees, Env<GenContext*>* env){
 		genStat(trees[i],env);
 
 }
-void Gen::genArgs(vector<Expression*> trees, vector<Type*> ts){}
+void Gen::genArgs(vector<Expression*> trees, vector<Type*> ts){
+	for(int i = 0;i<trees.size();i++)
+			genExpr(trees[i],ts[i])->load();
+}
+
+CondItem* Gen::genCond(Tree* tree){
+
+	return NULL;
+}
+/**
+ * 为表达式生成代码，判断常量的情况
+ */
+Item* Gen::genExpr(Tree* tree ,Type* pt){
+	Type* prept = this->pt;
+	if(tree->type->isConst()){
+		result = items->makeImmediateItem(tree->type);
+	}else{
+		this->pt = pt;
+		tree->accept(this);
+	}
+	this->pt = prept;
+	return result->coerce(pt);
+
+}
+
 
 /**
  * 生成code
@@ -67,7 +99,10 @@ void Gen::genMethod(MethodDecl* md,Env<GenContext*>* env){
 
 	int startpc = initCode(md,env);
 	genStat(md->body,env);
-
+	if(code->isAlive()){
+		code->statBegin(md->body->endPos);
+		//生成return指令
+	}
 
 
 }
@@ -80,17 +115,16 @@ void Gen::genMethod(MethodDecl* md,Env<GenContext*>* env){
 int Gen::initCode(MethodDecl* md,Env<GenContext*>* env){
 
 	md->sym->code = code = new Code(md->sym,pool);
-
+	items = new Items(pool,code);
 	//给非静态方法添加this和参数到局部变量表中
 	//此方法为非静态方法，构造函数为非静态方法
 	if(md->sym->flags_field&Flags::STATIC==0){
 
-		code->setDefined(code->addLocalVar(new VarSymbol(Flags::FINAL,Name::_this,md->sym->owner->type,md->sym->owner)));
+		code->setDefined(code->newLocalVar(new VarSymbol(Flags::FINAL,Name::_this,md->sym->owner->type,md->sym->owner)));
 	}
 	//添加参数到局部变量表中
 	for(int i = 0;i<md->params.size();i++){
-		VariableDecl* v = params[i];
-		code->setDefined(code->newLocalVar(v->sym));
+		code->setDefined(code->newLocalVar(md->params[i]->sym));
 	}
 	code->markAlive();
 	//没有附加信息，start从0开始
@@ -174,9 +208,6 @@ vector<Tree*> Gen::fillInitDefs(vector<Tree*> defs,ClassSymbol* csym){
 		for(int i =0;i<methodDefs.size();i++){
 			fillMethod((MethodDecl*)methodDefs[i],initCode);
 		}
-//		for(Tree* t:methodDefs){
-//			fillMethod((MethodDecl*)t,initCode);
-//		}
 	}
 	//填充静态初始化代码
 	if(cinitCode.size()!=0){
@@ -243,13 +274,26 @@ void Gen::visitMethodDef(MethodDecl* tree) {
 	localEnv->enclMethod = tree;
 	this->pt = ((MethodType*)(tree->sym->type))->restype;
 	genMethod(tree,localEnv);
-
+	//delete localEnv;
 }
 void Gen::visitVarDef(VariableDecl* tree) {
 }
 void Gen::visitSkip(Skip* tree) {
 }
 void Gen::visitBlock(Block* tree) {
+	int limit = code->nextreg;
+	Env<GenContext*>* localEnv = env->dup(tree);
+	genStats(tree->stats,localEnv);
+	//delete localEnv;
+
+	if(env->tree->getTag()!=Tree::METHODDEF){
+		//method的block在genMethod完成
+		code->statBegin(tree->endPos);
+		code->endScopes(limit);
+		code->pendingStatPos = -1;
+
+	}
+
 }
 void Gen::visitDoLoop(DoWhileLoop* tree) {
 }

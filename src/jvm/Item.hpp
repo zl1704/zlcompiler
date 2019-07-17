@@ -145,7 +145,7 @@ public:
 class ImmediateItem :public Item{
 public:
 	Literal * literal;
-	ImmediateItem(Type* type,Literal* literal,Code* code):Item(ByteCodes::typecode(type),code){
+	ImmediateItem(Type* type,Code* code):Item(ByteCodes::typecode(type),code){
 		this->literal = literal;
 	}
 	virtual Item* load();
@@ -232,8 +232,8 @@ public:
 		return new MemberItem(s,code);
 	}
 
-	Item* makeImmediateItem(Type* type,Literal* literal){
-		return new ImmediateItem(type,literal,code);
+	Item* makeImmediateItem(Type* type){
+		return new ImmediateItem(type,code);
 	}
 
 	Item* makeAssinItem(Item* lhs){

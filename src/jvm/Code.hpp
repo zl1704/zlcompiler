@@ -131,26 +131,10 @@ public:
 	int max_locals;
 	int max_stack;
 	int nextreg;
-
+	int pendingStatPos;
 	Chain* pendingJumps;
 	bool fixedPc ;
-	Code(MethodSymbol* sym,Pool* pool){
-		msym = sym;
-		this->pool = pool;
-		code = new jbyte[64];
-		size = 64;
-		lvs = new LocalVar*[20];
-		lvsize = 20;
-		alive = false;
-		max_locals = 0;
-		max_stack = 0;
-		nextreg = 0;
-		cp = 1;
-		syms = Symtab::instance();
-		state = new State(this);
-		pendingJumps = NULL;
-		fixedPc = false;
-	}
+	Code(MethodSymbol* sym,Pool* pool);
 	void checkCode();
 	//byte short  char int ---> int
 	static int truncate(int tc);
@@ -169,11 +153,27 @@ public:
 	void setDefined(int adr);
 	void setUnDefined(int adr);
 	void endScope(int adr);
+	void endScopes(int adr);
 
-	bool isAlive();
-	void markAlive();
-	void markDead();
+	inline bool isAlive(){
+		return alive&& pendingJumps!=NULL;
+	}
+	inline void markAlive(){
+		alive = true;
+	}
+	void markDead(){
+		alive = false;
+	}
 
+
+	//附加行号表信息
+	void addLineNumber(int startPc,int lineNumber);
+	void statBegin(int pos);
+	void markStatBegin();
+private:
+
+	vector<vector<int> > lineInfo;
+	Source* source;
 };
 
 /**
