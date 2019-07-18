@@ -331,10 +331,108 @@ void Code::emitInvokevirtual(int meth, Type mtype){
 
 }
 void Code::emitJump(int op){}
-void Code::emitop0(int op){}
+//输出一个无操作数的操作码
+void Code::emitop0(int op){
+	emitop(op);
+	if (!alive) return;
+	//TOS，记录栈顶类型
+	switch(op){
+	case ByteCodes::aaload:{
+		//对象数组
+		state->pop(1);//index
+		Type* t= state->pop1();
+		Type* stackType = t->tag == TypeTags::BOT ?syms->objectType : Type::elemtype(t);
+		state->push(stackType);
+
+	}
+	break;
+	case ByteCodes::goto_:
+		markDead();
+		break;
+	case ByteCodes::nop:
+	case ByteCodes::ineg:
+	case ByteCodes::lneg:
+	case ByteCodes::fneg:
+	case ByteCodes::dneg:
+		break;
+	case ByteCodes::aconst_null:
+		state->push(syms->botType);
+		break;
+	case ByteCodes::iconst_m1:
+	case ByteCodes::iconst_0:
+	case ByteCodes::iconst_1:
+	case ByteCodes::iconst_2:
+	case ByteCodes::iconst_3:
+	case ByteCodes::iconst_4:
+	case ByteCodes::iconst_5:
+	case ByteCodes::iload_0:
+	case ByteCodes::iload_1:
+	case ByteCodes::iload_2:
+	case ByteCodes::iload_3:
+		state.push(syms->intType);
+		break;
+	case ByteCodes::lconst_0:
+	case ByteCodes::lconst_1:
+	case ByteCodes::lload_0:
+	case ByteCodes::lload_1:
+	case ByteCodes::lload_2:
+	case ByteCodes::lload_3:
+		state.push(syms->longType);
+				break;
+	case ByteCodes::fconst_0:
+	case ByteCodes::fconst_1:
+	case ByteCodes::fconst_2:
+	case ByteCodes::fload_0:
+	case ByteCodes::fload_1:
+	case ByteCodes::fload_2:
+	case ByteCodes::fload_3:
+		state.push(syms->floatType);
+		break;
+	case ByteCodes::dconst_0:
+	case ByteCodes::dconst_1:
+	case ByteCodes::dload_0:
+	case ByteCodes::dload_1:
+	case ByteCodes::dload_2:
+	case ByteCodes::dload_3:
+		state.push(syms->longType);
+		break;
+	case ByteCodes::aload_0:
+		state.push(lvs[0]->vsym->type);
+		break;
+	case ByteCodes::aload_1:
+		state.push(lvs[1]->vsym->type);
+		break;
+	case ByteCodes::aload_2:
+		state.push(lvs[2]->vsym->type);
+		break;
+	case ByteCodes::aload_3:
+		state.push(lvs[3]->vsym->type);
+		break;
+	case ByteCodes::iaload:
+	case ByteCodes::baload:
+	case ByteCodes::caload:
+	case ByteCodes::saload:
+		state->pop(2);
+		state->push(syms->intType);
+		break;
+	case ByteCodes::laload:
+		state->pop(2);
+		state->push(syms->longType);
+		break;
+	case ByteCodes::faload:
+		state->pop(2);
+		state->push(syms->floatType);
+		break;
+	case ByteCodes::daload:
+		state->pop(2);
+		state->push(syms->doubleType);
+		break;
+	}
+
+}
 void Code::emitop1(int op, int od){}
-void Code::emitop1w(int op, int od);
-void Code::emitop1w(int op, int, od1, int od2){}
+void Code::emitop1w(int op, int od){}
+void Code::emitop1w(int op, int  od1, int od2){}
 void Code::emitop2(int op, int od){}
 void Code::emitop4(int op, int od){}
 
@@ -345,18 +443,19 @@ void Code::emit1(int op){
 	code[cp++] = (jbyte)op;
 
 }
-void Code::emit2(int op){
+void Code::emit2(int od){
 	emit1(od >> 8);
 	emit1(od);
 }
-void Code::emit4(int op){
+void Code::emit4(int od){
 	emit1(od >> 24);
 	emit1(od >> 16);
 	emit1(od >> 8);
 	emit1(od);
 }
+//输出一个操作码，可能有操作数，后续会生成
 void Code::emitop(int op){
-	if (pendingJumps != null) resolvePending();
+	if (pendingJumps != NULL) resolvePending();
 	if(alive){
 		if(pendingStatPos!=-1)
 			markStatBegin();
@@ -381,19 +480,19 @@ void Code::put1(int pc, int od) {
 	code[pc] = (jbyte) od;
 }
 void Code::put2(int pc, int od) {
-	put(pc, od >> 8);
-	put(pc + 1, od);
+	put1(pc, od >> 8);
+	put1(pc + 1, od);
 }
 void Code::put4(int pc, int od) {
-	put(pc, od >> 24);
-	put(pc + 1, od >> 16);
-	put(pc + 2, od >> 8);
-	put(pc + 3, od);
+	put1(pc, od >> 24);
+	put1(pc + 1, od >> 16);
+	put1(pc + 2, od >> 8);
+	put1(pc + 3, od);
 }
 //字节对齐
 void Code::align(int incr){
 	if (alive)
-	   while (cp % incr != 0) emitop0(nop);
+	   while (cp % incr != 0) emitop0(ByteCodes::nop);
 }
 
 

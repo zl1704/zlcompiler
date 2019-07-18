@@ -11,14 +11,17 @@
 #include "../util/includeGlobal.hpp"
 #include "Pool.hpp"
 #include "../util/Bits.hpp"
+
 #define MAXPC 65535
 class Code;
 class Chain;
+class Items;
 /**
  * 局部变量
  */
 class LocalVar{
 public:
+	friend class Code;
 	LocalVar(){
 		this->vsym = NULL;
 		this->reg = -1;
@@ -127,6 +130,7 @@ public:
 	Symtab* syms;
 	Pool* pool;
 	State* state;
+	Items* items;
 	bool alive;
 	int max_locals;
 	int max_stack;
@@ -134,6 +138,7 @@ public:
 	int pendingStatPos;
 	Chain* pendingJumps;
 	bool fixedPc ;
+
 	Code(MethodSymbol* sym,Pool* pool);
 	void checkCode();
 	//byte short  char int ---> int
@@ -180,7 +185,7 @@ public:
 	void emitop0(int op);
 	void emitop1(int op,int od);
 	void emitop1w(int op,int od);
-	void emitop1w(int op,int,od1,int od2);
+	void emitop1w(int op,int od1,int od2);
 	void emitop2(int op,int od);
 	void emitop4(int op,int od);
 

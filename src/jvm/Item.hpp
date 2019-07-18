@@ -9,7 +9,8 @@
 #define JVM_ITEM_HPP_
 #include "ByteCodes.hpp"
 #include "Code.hpp"
-
+class Items;
+class CondItem;
 /**
  * 代码生成中的一些东西，例如局部变量，栈中对象，静态变量，成员变量和方法，立即数常量，条件跳转
  */
@@ -22,6 +23,7 @@ public:
 	Item(int typecode,Code* code){
 		this->typecode = typecode;
 		this->code = code;
+		this->items = code->items;
 	}
 
 	virtual Item* load();
@@ -32,8 +34,10 @@ public:
 	virtual void stash(int toscode);
 	virtual Item* coerce(int targetcode);
 	Item* coerce(Type* targettype);
-
+	virtual CondItem* mkCond();
 	int width();
+private :
+	Items* items;
 };
 
 class StackItem:public Item{
@@ -45,8 +49,8 @@ public:
 	virtual void  duplicate();
 	virtual void  drop();
 	virtual void stash(int toscode);
-	virtual Item* coerce(int targetcode);
-	Item* coerce(Type* targettype);
+//	virtual Item* coerce(int targetcode);
+//	Item* coerce(Type* targettype);
 	int width();
 };
 
@@ -202,11 +206,13 @@ public:
 
 class Items{
 public:
+	friend class Item;
 	Pool* pool;
 	Code* code;
 	Items(Pool* pool,Code* code){
 		this->pool = pool;
 		this->code =code;
+		code->items = this;
 		voidItem = new Item(ByteCodes::VOIDcode,code);
 		thisItem = new SelfItem(false,code);
 		superItem = new SelfItem(true,code);
@@ -221,26 +227,26 @@ public:
 		return stackItem[ByteCodes::typecode(type)];
 	}
 
-	Item* makeLocalItem(VarSymbol* v){
+	LocalItem* makeLocalItem(VarSymbol* v){
 		return new LocalItem(v->type,v->adr,code);
 	}
-	Item* makeStaticItem(Symbol* member){
+	StaticItem* makeStaticItem(Symbol* member){
 		return new StaticItem(member,code);
 	}
 
-	Item* makeMemberItem(Symbol* s){
+	MemberItem* makeMemberItem(Symbol* s){
 		return new MemberItem(s,code);
 	}
 
-	Item* makeImmediateItem(Type* type){
+	ImmediateItem* makeImmediateItem(Type* type){
 		return new ImmediateItem(type,code);
 	}
 
-	Item* makeAssinItem(Item* lhs){
+	AssinItem* makeAssinItem(Item* lhs){
 		return new AssinItem(lhs,code);
 	}
 
-	Item* makeCondItem(int opcode,Chain* trueJumps,Chain* falseJumps){
+	CondItem* makeCondItem(int opcode,Chain* trueJumps,Chain* falseJumps){
 		return new CondItem(opcode,trueJumps,falseJumps,code);
 	}
 

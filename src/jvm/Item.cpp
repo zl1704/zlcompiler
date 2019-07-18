@@ -17,7 +17,9 @@ void  Item::store(){
 void  Item::invoke(){}
 void  Item::duplicate(){}
 void  Item::drop(){}
-void Item::stash(int toscode){}
+void Item::stash(int toscode){
+	items->stackItem[toscode]->duplicate();
+}
 /**
  * 期望转换的类型
  * 如：现结果为int(char、 byte 、short都会当做int处理),tagert(也就是pt)为double
@@ -40,11 +42,15 @@ Item* Item::coerce(int targetcode){
 		if(targetc != targetcode){
 			code->emitop0(ByteCodes::int2byte+targetcode-ByteCodes::BYTEcode);
 		}
-		return stackItem[targetcode];
+		return items->stackItem[targetcode];
 	}
 }
 Item* Item::coerce(Type* targettype){
 	return coerce(targettype->tag);
+}
+CondItem* Item::mkCond(){
+	load();
+	return items->makeCondItem(ByteCodes::ifne,NULL,NULL);
 }
 int Item::width(){
 	return 0;
@@ -59,10 +65,13 @@ void  StackItem::store(){}
 void  StackItem::invoke(){}
 void  StackItem::duplicate(){}
 void  StackItem::drop(){}
-void StackItem::stash(int toscode){}
-Item* StackItem::coerce(int targetcode){}
-Item* StackItem::coerce(Type* targettype){}
-int StackItem::width(){}
+//Duplicate the top word to place 3.
+void StackItem::stash(int toscode){
+//	code->emitop0()
+}
+int StackItem::width(){
+	return Code::width(typecode);
+}
 /**
  *  IndexedItem
  */
