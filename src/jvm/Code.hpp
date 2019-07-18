@@ -165,13 +165,44 @@ public:
 		alive = false;
 	}
 
-
 	//附加行号表信息
 	void addLineNumber(int startPc,int lineNumber);
 	void statBegin(int pos);
 	void markStatBegin();
-private:
 
+
+	//Emit code
+	void emitInvokedynamic(int meth,Type* mtype);
+	void emitInvokespecial(int meth,Type* mtype);
+	void emitInvokestatic(int meth,Type* mtype);
+	void emitInvokevirtual(int meth, Type mtype);
+	void emitJump(int op);
+	void emitop0(int op);
+	void emitop1(int op,int od);
+	void emitop1w(int op,int od);
+	void emitop1w(int op,int,od1,int od2);
+	void emitop2(int op,int od);
+	void emitop4(int op,int od);
+
+	void emit1(int op);
+	void emit2(int op);
+	void emit4(int op);
+	void emitop(int op);
+
+	//get put
+
+	int get1(int pc);
+	int get2(int pc);
+	int get4(int pc);
+
+	void put1(int pc,int od);
+	void put2(int pc,int od);
+	void put4(int pc,int od);
+	void align(int incr);
+
+
+
+private:
 	vector<vector<int> > lineInfo;
 	Source* source;
 };

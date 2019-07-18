@@ -8,12 +8,21 @@
 /**
  * Item
  */
-Item* Item::load(){}
-void  Item::store(){}
+Item* Item::load(){
+	return NULL;
+}
+void  Item::store(){
+
+}
 void  Item::invoke(){}
 void  Item::duplicate(){}
 void  Item::drop(){}
 void Item::stash(int toscode){}
+/**
+ * 期望转换的类型
+ * 如：现结果为int(char、 byte 、short都会当做int处理),tagert(也就是pt)为double
+ * 	  这里的类型转换都都是可行的，语义分析已经检查了所有转型
+ */
 Item* Item::coerce(int targetcode){
 	if(typecode==targetcode)
 		return this;
@@ -23,16 +32,23 @@ Item* Item::coerce(int targetcode){
 		int targetc = Code::truncate(targetcode);
 		if(typec!=targetc){
 			int offset = targetc>typec?targetc-1:typec;
-
+			//添加一条转换类型指令
+			//java字节码设计巧妙，方便计算相似指令
+			code->emitop0(ByteCodes::i2l+typec*3+offset);
 		}
-
+		//double -> short :double -> int -> short
+		if(targetc != targetcode){
+			code->emitop0(ByteCodes::int2byte+targetcode-ByteCodes::BYTEcode);
+		}
+		return stackItem[targetcode];
 	}
-
 }
 Item* Item::coerce(Type* targettype){
 	return coerce(targettype->tag);
 }
-int Item::width(){}
+int Item::width(){
+	return 0;
+}
 
 /**
  * StackItem

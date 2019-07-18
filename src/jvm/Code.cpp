@@ -183,14 +183,16 @@ void Code::checkCode() {
 	if (cp == size) {
 		jbyte* new_code = new jbyte[size * 2];
 		memset(new_code, NULL, size * 2 * sizeof(jbyte));
+		memcpy(new_code,code,size*sizeof(jbyte));
 		delete code;
 		code = new_code;
+		size = size *2;
 	}
 }
 int Code::curPc() {
 	if (pendingJumps != NULL)
 		resolvePending();
-	fixedPc = true;
+	//fixedPc = true;
 	return cp;
 }
 void Code::resolvePending() {
@@ -199,6 +201,7 @@ void Code::resolvePending() {
 	resolve(c, cp);
 
 }
+//回填
 void Code::resolve(Chain* c, int target) {
 
 
@@ -309,6 +312,88 @@ void Code::markStatBegin(){
 		addLineNumber(cp,line);
 	}
 	pendingStatPos = -1;
+}
+
+/**
+ * Emit code
+ */
+
+void Code::emitInvokedynamic(int meth, Type* mtype){
+
+}
+void Code::emitInvokespecial(int meth, Type* mtype){
+
+}
+void Code::emitInvokestatic(int meth, Type* mtype){
+
+}
+void Code::emitInvokevirtual(int meth, Type mtype){
+
+}
+void Code::emitJump(int op){}
+void Code::emitop0(int op){}
+void Code::emitop1(int op, int od){}
+void Code::emitop1w(int op, int od);
+void Code::emitop1w(int op, int, od1, int od2){}
+void Code::emitop2(int op, int od){}
+void Code::emitop4(int op, int od){}
+
+void Code::emit1(int op){
+	if(!alive)
+		return;
+	checkCode();
+	code[cp++] = (jbyte)op;
+
+}
+void Code::emit2(int op){
+	emit1(od >> 8);
+	emit1(od);
+}
+void Code::emit4(int op){
+	emit1(od >> 24);
+	emit1(od >> 16);
+	emit1(od >> 8);
+	emit1(od);
+}
+void Code::emitop(int op){
+	if (pendingJumps != null) resolvePending();
+	if(alive){
+		if(pendingStatPos!=-1)
+			markStatBegin();
+		emit1(op);
+	}
+}
+
+//get put
+//返回pc处 code，无符号整数，清除高位信息
+int Code::get1(int pc){
+	return code[pc] & 0xFF;
+}
+int Code::get2(int pc){
+	return (get1(pc)<< 8 ) |get1(pc+1);
+}
+int Code::get4(int pc) {
+	return (get1(pc) << 24) | get1(pc + 2) << 16 | get1(pc + 3) << 8
+			| get1(pc + 4);
+}
+
+void Code::put1(int pc, int od) {
+	code[pc] = (jbyte) od;
+}
+void Code::put2(int pc, int od) {
+	put(pc, od >> 8);
+	put(pc + 1, od);
+}
+void Code::put4(int pc, int od) {
+	put(pc, od >> 24);
+	put(pc + 1, od >> 16);
+	put(pc + 2, od >> 8);
+	put(pc + 3, od);
+}
+//字节对齐
+void Code::align(int incr){
+	if (alive)
+	   while (cp % incr != 0) emitop0(nop);
 }
 
 
