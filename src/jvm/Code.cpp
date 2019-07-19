@@ -122,36 +122,34 @@ void State::forceStackTop(Type* t) {
 	}
 
 }
-State* State::join(State* other){
+State* State::join(State* other) {
 
 	return this;
 }
 
-
 /**
  * Code
  */
-Code::Code(MethodSymbol* sym,Pool* pool){
-		msym = sym;
-		this->pool = pool;
-		code = new jbyte[64];
-		size = 64;
-		lvs = new LocalVar*[20];
-		lvsize = 20;
-		alive = false;
-		max_locals = 0;
-		max_stack = 0;
-		nextreg = 0;
-		cp = 1;
-		pendingStatPos = -1;
-		syms = Symtab::instance();
-		state = new State(this);
-		pendingJumps = NULL;
-		fixedPc = false;
-		source = Source::instance();
+Code::Code(MethodSymbol* sym, Pool* pool) {
+	msym = sym;
+	this->pool = pool;
+	code = new jbyte[64];
+	size = 64;
+	lvs = new LocalVar*[20];
+	lvsize = 20;
+	alive = false;
+	max_locals = 0;
+	max_stack = 0;
+	nextreg = 0;
+	cp = 1;
+	pendingStatPos = -1;
+	syms = Symtab::instance();
+	state = new State(this);
+	pendingJumps = NULL;
+	fixedPc = false;
+	items = NULL;
+	source = Source::instance();
 }
-
-
 
 int Code::truncate(int tc) {
 	switch (tc) {
@@ -183,10 +181,10 @@ void Code::checkCode() {
 	if (cp == size) {
 		jbyte* new_code = new jbyte[size * 2];
 		memset(new_code, NULL, size * 2 * sizeof(jbyte));
-		memcpy(new_code,code,size*sizeof(jbyte));
+		memcpy(new_code, code, size * sizeof(jbyte));
 		delete code;
 		code = new_code;
-		size = size *2;
+		size = size * 2;
 	}
 }
 int Code::curPc() {
@@ -203,7 +201,6 @@ void Code::resolvePending() {
 }
 //回填
 void Code::resolve(Chain* c, int target) {
-
 
 }
 
@@ -260,11 +257,11 @@ void Code::setUnDefined(int adr) {
 	if (adr < lvsize && lvs[adr] != NULL && lvs[adr]->start_pc != MAXPC) {
 		LocalVar* v = lvs[adr];
 		int length = curPc() - v->start_pc;
-		if(length>0&&length<MAXPC){
+		if (length > 0 && length < MAXPC) {
 			v->length = length;
 			//lvs[adr] = NULL; //可以推迟endScope中置NULL
 			//lvs[adr] = v->dup();
-		}else{
+		} else {
 			v->length = MAXPC;
 		}
 	}
@@ -273,10 +270,10 @@ void Code::setUnDefined(int adr) {
 void Code::endScope(int adr) {
 
 	LocalVar* v = lvs[adr];
-	if(v!=NULL){
+	if (v != NULL) {
 		lvs[adr] = NULL;
-		if(v->start_pc!=MAXPC){
-			int length = curPc()-v->start_pc;
+		if (v->start_pc != MAXPC) {
+			int length = curPc() - v->start_pc;
 			v->length = length;
 		}
 	}
@@ -284,32 +281,32 @@ void Code::endScope(int adr) {
 
 }
 
-void Code::endScopes(int adr){
+void Code::endScopes(int adr) {
 	int preNextReg = nextreg;
 	nextreg = adr;
-	for(int i = adr;i<preNextReg;i++)
+	for (int i = adr; i < preNextReg; i++)
 		endScope(i);
 
 }
 
-void Code::addLineNumber(int startPc,int lineNumber){
+void Code::addLineNumber(int startPc, int lineNumber) {
 
 	//lineNumber行已添加的无须再添加
-	if(lineInfo.empty()||lineInfo.back()[1]!=lineNumber){
-		lineInfo.push_back(util::ListOf(startPc,lineNumber));
+	if (lineInfo.empty() || lineInfo.back()[1] != lineNumber) {
+		lineInfo.push_back(util::ListOf(startPc, lineNumber));
 	}
 }
-void Code::statBegin(int pos){
-	if(pos!=-1){
+void Code::statBegin(int pos) {
+	if (pos != -1) {
 		pendingStatPos = pos;
 	}
 
 }
-void Code::markStatBegin(){
+void Code::markStatBegin() {
 
-	if(alive){
+	if (alive) {
 		int line = source->getLine(pendingStatPos);
-		addLineNumber(cp,line);
+		addLineNumber(cp, line);
 	}
 	pendingStatPos = -1;
 }
@@ -318,34 +315,37 @@ void Code::markStatBegin(){
  * Emit code
  */
 
-void Code::emitInvokedynamic(int meth, Type* mtype){
+void Code::emitInvokedynamic(int meth, Type* mtype) {
 
 }
-void Code::emitInvokespecial(int meth, Type* mtype){
+void Code::emitInvokespecial(int meth, Type* mtype) {
 
 }
-void Code::emitInvokestatic(int meth, Type* mtype){
+void Code::emitInvokestatic(int meth, Type* mtype) {
 
 }
-void Code::emitInvokevirtual(int meth, Type mtype){
+void Code::emitInvokevirtual(int meth, Type mtype) {
 
 }
-void Code::emitJump(int op){}
+void Code::emitJump(int op) {
+}
 //输出一个无操作数的操作码
-void Code::emitop0(int op){
+void Code::emitop0(int op) {
 	emitop(op);
-	if (!alive) return;
+	if (!alive)
+		return;
 	//TOS，记录栈顶类型
-	switch(op){
-	case ByteCodes::aaload:{
+	switch (op) {
+	case ByteCodes::aaload: {
 		//对象数组
-		state->pop(1);//index
-		Type* t= state->pop1();
-		Type* stackType = t->tag == TypeTags::BOT ?syms->objectType : Type::elemtype(t);
+		state->pop(1);			//index
+		Type* t = state->pop1();
+		Type* stackType =
+				t->tag == TypeTags::BOT ? syms->objectType : Type::elemtype(t);
 		state->push(stackType);
 
 	}
-	break;
+		break;
 	case ByteCodes::goto_:
 		markDead();
 		break;
@@ -378,7 +378,7 @@ void Code::emitop0(int op){
 	case ByteCodes::lload_2:
 	case ByteCodes::lload_3:
 		state.push(syms->longType);
-				break;
+		break;
 	case ByteCodes::fconst_0:
 	case ByteCodes::fconst_1:
 	case ByteCodes::fconst_2:
@@ -427,37 +427,335 @@ void Code::emitop0(int op){
 		state->pop(2);
 		state->push(syms->doubleType);
 		break;
+	case ByteCodes::istore_0:
+	case ByteCodes::istore_1:
+	case ByteCodes::istore_2:
+	case ByteCodes::istore_3:
+	case ByteCodes::fstore_0:
+	case ByteCodes::fstore_1:
+	case ByteCodes::fstore_2:
+	case ByteCodes::fstore_3:
+	case ByteCodes::astore_0:
+	case ByteCodes::astore_1:
+	case ByteCodes::astore_2:
+	case ByteCodes::astore_3:
+	case ByteCodes::pop:
+	case ByteCodes::lshr:
+	case ByteCodes::lshl:
+	case ByteCodes::lushr:
+		state->pop(1);
+		break;
+	case ByteCodes::iastore:
+	case ByteCodes::fastore:
+	case ByteCodes::aastore:
+	case ByteCodes::dastore:
+	case ByteCodes::aastore:
+	case ByteCodes::bastore:
+	case ByteCodes::castore:
+	case ByteCodes::sastore:
+		//stack :...,value,index,array
+		state->pop(3);
+		break;
+	case ByteCodes::lastore:
+	case ByteCodes::dastore:
+		//stack :...,value(two word),index,array
+		state->pop(4);
+		break;
+	case ByteCodes::areturn:
+	case ByteCodes::ireturn:
+	case ByteCodes::freturn:
+		state->pop(1);
+		markDead();
+		break;
+	case ByteCodes::lstore_0:
+	case ByteCodes::lstore_1:
+	case ByteCodes::lstore_2:
+	case ByteCodes::lstore_3:
+	case ByteCodes::dstore_0:
+	case ByteCodes::dstore_1:
+	case ByteCodes::dstore_2:
+	case ByteCodes::dstore_3:
+	case ByteCodes::pop2:
+		state->pop(2);
+		break;
+	case ByteCodes::lreturn:
+	case ByteCodes::dreturn:
+		state->pop(2);
+		markDead();
+		break;
+	case ByteCodes::ret:			// with a jsr or jsr_w.
+	case ByteCodes::return_:			//from method
+		markDead();
+		break;
+	case ByteCodes::dup:
+		state->push(state->peek());
+		break;
+	case ByteCodes::dup2:
+		state->push(state->peek());
+		break;
+	case ByteCodes::dup_x1:
+		//before:  stack: ...,a,b
+		Type* b = state->pop1();
+		Type* a = state->pop1();
+		state->push(b);
+		state->push(a);
+		state->push(b);
+		//after:  stack: ...,b,a,b
+		break;
+	case ByteCodes::dup_x2:
+		//Duplicate the top word to place 4.
+		//before:  stack: ...,a,b,c
+		Type* c = state->pop1();
+		if (state->peek() != NULL) {
+
+			Type* b = state->pop1();
+			Type* a = state->pop1();
+			state->push(c);
+			state->push(b);
+			state->push(a);
+			state->push(c);
+		} else {
+			//a,b是一个双字数据
+			Type* a = state->pop2();
+			state->push(c);
+			state->push(a);
+			state->push(c);
+		}
+		//after:  stack: ...,c,a,b,c
+		break;
+	case ByteCodes::dup2_x1:
+		//Duplicate the top two words to places 4 and 5.
+		//先判断栈顶是否为双字数据
+		//before:  stack: ...,a,b,c,
+		if (state->peek() != NULL) {
+			Type* c = state->pop1();
+			Type* b = state->pop1();
+			Type* a = state->pop1();
+			state->push(b);
+			state->push(c);
+			state->push(a);
+			state->push(b);
+			state->push(c);
+
+		} else {
+			Type* b = state->pop2();
+			Type* a = state->pop2();
+			state->push(b);
+			state->push(a);
+			state->push(b);
+		}
+		//after:  stack: ...b,c,a,b,c
+		break;
+	case ByteCodes::dup2_x2:
+		//Duplicate the top two words to places 5 and 6.
+		//先判断栈顶是否为双字数据
+		//before:  stack: ...,a,b,c,d
+		if (state->peek() != NULL) {
+			Type* d = state->pop1();
+			Type* c = state->pop1();
+			if (state->peek() != NULL) {
+				Type* b = state->pop1();
+				Type* a = state->pop1();
+				state->push(c);
+				state->push(d);
+				state->push(a);
+				state->push(b);
+				state->push(c);
+				state->push(d);
+			} else {
+				Type* a = state->pop2();
+				state->push(c);
+				state->push(d);
+				state->push(a);
+				state->push(c);
+				state->push(d);
+			}
+
+		} else {
+			Type* c = state->pop2();
+			if (state->peek() != NULL) {
+				Type* b = state->pop1();
+				Type* a = state->pop1();
+				state->push(c);
+				state->push(a);
+				state->push(b);
+				state->push(c);
+			} else {
+				Type* a = state->pop2();
+				state->push(c);
+				state->push(a);
+				state->push(c);
+			}
+		}
+		//after:  stack: ...c,d,a,b,c,d
+		break;
+	case ByteCodes::swap:
+		Type* a = state->pop1();
+		Type* b = state->pop2();
+		state->push(a);
+		state->push(b);
+		break;
+	case ByteCodes::iadd:
+	case ByteCodes::isub:
+	case ByteCodes::imul:
+	case ByteCodes::idiv:
+	case ByteCodes::imod:
+	case ByteCodes::ishl:
+	case ByteCodes::ishr:
+	case ByteCodes::iushr:
+	case ByteCodes::iand:
+	case ByteCodes::ior:
+	case ByteCodes::ixor:
+		state->pop(1);
+		break;
+	case ByteCodes::ladd:
+	case ByteCodes::lsub:
+	case ByteCodes::lmul:
+	case ByteCodes::ldiv:
+	case ByteCodes::lmod:
+	case ByteCodes::land:
+	case ByteCodes::lor:
+	case ByteCodes::lxor:
+		state->pop(2);
+		break;
+	case ByteCodes::fadd:
+	case ByteCodes::fsub:
+	case ByteCodes::fmul:
+	case ByteCodes::fdiv:
+	case ByteCodes::fmod:
+		state->pop(1);
+		break;
+	case ByteCodes::dadd:
+	case ByteCodes::dsub:
+	case ByteCodes::dmul:
+	case ByteCodes::ddiv:
+	case ByteCodes::dmod:
+		state->pop(2);
+		break;
+	case ByteCodes::i2l:
+		state->pop(1);
+		state->push(syms->longType);
+		break;
+	case ByteCodes::i2f:
+		state->pop(1);
+		state->push(syms->floatType);
+		break;
+	case ByteCodes::i2d:
+		state->pop(1);
+		state->push(syms->doubleType);
+		break;
+	case ByteCodes::l2i:
+		state->pop(2);
+		state->push(syms->intType);
+		break;
+	case ByteCodes::l2i:
+		state->pop(2);
+		state->push(syms->intType);
+		break;
+	case ByteCodes::l2f:
+		state->pop(2);
+		state->push(syms->floatType);
+		break;
+	case ByteCodes::l2d:
+		state->pop(2);
+		state->push(syms->doubleType);
+		break;
+	case ByteCodes::f2i:
+		state->pop(1);
+		state->push(syms->intType);
+		break;
+	case ByteCodes::f2l:
+		state->pop(1);
+		state->push(syms->longType);
+		break;
+	case ByteCodes::f2d:
+		state->pop(1);
+		state->push(syms->doubleType);
+		break;
+	case ByteCodes::d2i:
+		state->pop(2);
+		state->push(syms->intType);
+		break;
+	case ByteCodes::d2l:
+		state->pop(2);
+		state->push(syms->longType);
+		break;
+	case ByteCodes::d2f:
+		state->pop(2);
+		state->push(syms->floatType);
+		break;
+	case ByteCodes::tableswitch:
+	case ByteCodes::lookupswitch:
+		state->pop(1);
+		break;
+	case ByteCodes::int2byte:
+	case ByteCodes::int2char:
+	case ByteCodes::int2short:
+		break;
+	case ByteCodes::lcmp:
+		state->pop(4);
+		state->push(syms->intType);
+		break;
+	case ByteCodes::fcmpl:
+	case ByteCodes::fcmpg:
+		state->pop(2);
+		state->push(syms->intType);
+		break;
+	case ByteCodes::fcmpl:
+	case ByteCodes::fcmpg:
+		state->pop(2);
+		state->push(syms->intType);
+		break;
+	case ByteCodes::dcmpl:
+	case ByteCodes::dcmpg:
+		state->pop(4);
+		state->push(syms->intType);
+		break;
+	case ByteCodes::wide://must be handled by the caller
+		return;
+	case ByteCodes::monitorenter:
+	case ByteCodes::monitorexit:
+		state->pop(1);
+		break;
+	default:
+		cout << "emitop0 error"<<endl;
 	}
 
 }
-void Code::emitop1(int op, int od){}
-void Code::emitop1w(int op, int od){}
-void Code::emitop1w(int op, int  od1, int od2){}
-void Code::emitop2(int op, int od){}
-void Code::emitop4(int op, int od){}
+void Code::emitop1(int op, int od) {
+}
+void Code::emitop1w(int op, int od) {
+}
+void Code::emitop1w(int op, int od1, int od2) {
+}
+void Code::emitop2(int op, int od) {
+}
+void Code::emitop4(int op, int od) {
+}
 
-void Code::emit1(int op){
-	if(!alive)
+void Code::emit1(int op) {
+	if (!alive)
 		return;
 	checkCode();
-	code[cp++] = (jbyte)op;
+	code[cp++] = (jbyte) op;
 
 }
-void Code::emit2(int od){
+void Code::emit2(int od) {
 	emit1(od >> 8);
 	emit1(od);
 }
-void Code::emit4(int od){
+void Code::emit4(int od) {
 	emit1(od >> 24);
 	emit1(od >> 16);
 	emit1(od >> 8);
 	emit1(od);
 }
 //输出一个操作码，可能有操作数，后续会生成
-void Code::emitop(int op){
-	if (pendingJumps != NULL) resolvePending();
-	if(alive){
-		if(pendingStatPos!=-1)
+void Code::emitop(int op) {
+	if (pendingJumps != NULL)
+		resolvePending();
+	if (alive) {
+		if (pendingStatPos != -1)
 			markStatBegin();
 		emit1(op);
 	}
@@ -465,11 +763,11 @@ void Code::emitop(int op){
 
 //get put
 //返回pc处 code，无符号整数，清除高位信息
-int Code::get1(int pc){
+int Code::get1(int pc) {
 	return code[pc] & 0xFF;
 }
-int Code::get2(int pc){
-	return (get1(pc)<< 8 ) |get1(pc+1);
+int Code::get2(int pc) {
+	return (get1(pc) << 8) | get1(pc + 1);
 }
 int Code::get4(int pc) {
 	return (get1(pc) << 24) | get1(pc + 2) << 16 | get1(pc + 3) << 8
@@ -490,12 +788,11 @@ void Code::put4(int pc, int od) {
 	put1(pc + 3, od);
 }
 //字节对齐
-void Code::align(int incr){
+void Code::align(int incr) {
 	if (alive)
-	   while (cp % incr != 0) emitop0(ByteCodes::nop);
+		while (cp % incr != 0)
+			emitop0(ByteCodes::nop);
 }
-
-
 
 /**
  *  Chain
