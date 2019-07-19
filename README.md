@@ -14,7 +14,7 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 	* Code : 代码生成核心类，每个method对应一个Code 
 	* Gen  : 代码生成流程控制类，控制着代码生成的流程 
 
-## Code
+### Code
 
 
 + addLocalVar(VarSymbol* v) 
@@ -27,7 +27,7 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 	行号与字节码映射，用于Debug调试 
 + emit相关方法：输出字节码指令
 
-## Gen
+### Gen
 
 + genClass
 	
