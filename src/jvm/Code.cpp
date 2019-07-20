@@ -329,12 +329,15 @@ void Code::emitInvokevirtual(int meth, Type mtype) {
 }
 void Code::emitJump(int op) {
 }
-//输出一个无操作数的操作码
+/**
+ * 输出一个无操作数的操作码,并管理栈中状态(TOS)
+ */
 void Code::emitop0(int op) {
 	emitop(op);
 	if (!alive)
 		return;
 	//TOS，记录栈顶类型
+	Type* a,*b,*c,*d;
 	switch (op) {
 	case ByteCodes::aaload: {
 		//对象数组
@@ -369,7 +372,7 @@ void Code::emitop0(int op) {
 	case ByteCodes::iload_1:
 	case ByteCodes::iload_2:
 	case ByteCodes::iload_3:
-		state.push(syms->intType);
+		state->push(syms->intType);
 		break;
 	case ByteCodes::lconst_0:
 	case ByteCodes::lconst_1:
@@ -377,7 +380,7 @@ void Code::emitop0(int op) {
 	case ByteCodes::lload_1:
 	case ByteCodes::lload_2:
 	case ByteCodes::lload_3:
-		state.push(syms->longType);
+		state->push(syms->longType);
 		break;
 	case ByteCodes::fconst_0:
 	case ByteCodes::fconst_1:
@@ -386,7 +389,7 @@ void Code::emitop0(int op) {
 	case ByteCodes::fload_1:
 	case ByteCodes::fload_2:
 	case ByteCodes::fload_3:
-		state.push(syms->floatType);
+		state->push(syms->floatType);
 		break;
 	case ByteCodes::dconst_0:
 	case ByteCodes::dconst_1:
@@ -394,19 +397,19 @@ void Code::emitop0(int op) {
 	case ByteCodes::dload_1:
 	case ByteCodes::dload_2:
 	case ByteCodes::dload_3:
-		state.push(syms->longType);
+		state->push(syms->longType);
 		break;
 	case ByteCodes::aload_0:
-		state.push(lvs[0]->vsym->type);
+		state->push(lvs[0]->vsym->type);
 		break;
 	case ByteCodes::aload_1:
-		state.push(lvs[1]->vsym->type);
+		state->push(lvs[1]->vsym->type);
 		break;
 	case ByteCodes::aload_2:
-		state.push(lvs[2]->vsym->type);
+		state->push(lvs[2]->vsym->type);
 		break;
 	case ByteCodes::aload_3:
-		state.push(lvs[3]->vsym->type);
+		state->push(lvs[3]->vsym->type);
 		break;
 	case ByteCodes::iaload:
 	case ByteCodes::baload:
@@ -447,8 +450,6 @@ void Code::emitop0(int op) {
 		break;
 	case ByteCodes::iastore:
 	case ByteCodes::fastore:
-	case ByteCodes::aastore:
-	case ByteCodes::dastore:
 	case ByteCodes::aastore:
 	case ByteCodes::bastore:
 	case ByteCodes::castore:
@@ -495,8 +496,8 @@ void Code::emitop0(int op) {
 		break;
 	case ByteCodes::dup_x1:
 		//before:  stack: ...,a,b
-		Type* b = state->pop1();
-		Type* a = state->pop1();
+		b = state->pop1();
+		a = state->pop1();
 		state->push(b);
 		state->push(a);
 		state->push(b);
@@ -505,7 +506,7 @@ void Code::emitop0(int op) {
 	case ByteCodes::dup_x2:
 		//Duplicate the top word to place 4.
 		//before:  stack: ...,a,b,c
-		Type* c = state->pop1();
+		c = state->pop1();
 		if (state->peek() != NULL) {
 
 			Type* b = state->pop1();
@@ -590,8 +591,8 @@ void Code::emitop0(int op) {
 		//after:  stack: ...c,d,a,b,c,d
 		break;
 	case ByteCodes::swap:
-		Type* a = state->pop1();
-		Type* b = state->pop2();
+		a = state->pop1();
+		b = state->pop2();
 		state->push(a);
 		state->push(b);
 		break;
@@ -648,10 +649,6 @@ void Code::emitop0(int op) {
 		state->pop(2);
 		state->push(syms->intType);
 		break;
-	case ByteCodes::l2i:
-		state->pop(2);
-		state->push(syms->intType);
-		break;
 	case ByteCodes::l2f:
 		state->pop(2);
 		state->push(syms->floatType);
@@ -701,11 +698,6 @@ void Code::emitop0(int op) {
 		state->pop(2);
 		state->push(syms->intType);
 		break;
-	case ByteCodes::fcmpl:
-	case ByteCodes::fcmpg:
-		state->pop(2);
-		state->push(syms->intType);
-		break;
 	case ByteCodes::dcmpl:
 	case ByteCodes::dcmpg:
 		state->pop(4);
@@ -722,15 +714,211 @@ void Code::emitop0(int op) {
 	}
 
 }
+//! 不知道是否可行，回头再测试
+Type* Code::typeForPool(void* cd){
+
+
+	if(static_cast<ConstType* >(cd)){
+		ConstType* ct = static_cast<ConstType* >(cd);
+		if (ct->tag == TypeTags::INT)
+			return syms->intType;
+		if (ct->tag == TypeTags::FLOAT)
+			return syms->floatType;
+		if (ct->tag == TypeTags::STRING)
+			return syms->stringType;
+		if (ct->tag == TypeTags::DOUBLE)
+			return syms->doubleType;
+
+	}else if(static_cast<ClassSymbol* >(cd)||static_cast<ArrayType* >(cd)){
+		return syms->classType;
+	}
+	cout << "error:  typeForPool ";
+	return NULL;
+
+}
+/**
+ * 一个字节操作数
+ * bipush ldc1
+ */
 void Code::emitop1(int op, int od) {
+	emitop(op);
+	if(!alive) return;
+	emit1(od);
+	switch(op){
+	case ByteCodes::bipush:
+		state->push(syms->intType);
+		break;
+	case ByteCodes::ldc1:
+		state->push(typeForPool(pool->pool[od]));
+		break;
+	default:
+		cout << ByteCodes::getCodeStr(op)<<"不应该出现在 emitop1"<<endl;
+
+	}
 }
+/**
+ * 一个字节操作数
+ * 可带wide，如果od大于一个字节范围，附加wide
+ * 可带wide且一个操作数的指令:load store ret
+ * 最多两个字节，局部变量表最大65535
+ */
 void Code::emitop1w(int op, int od) {
+	if (od > 0xFF) {
+		emitop(ByteCodes::wide);
+		emitop(op);
+		emit2(od);
+	} else {
+		emitop(op);
+		emit1(od);
+	}
+	if(!alive)
+		return;
+	switch(op){
+	case ByteCodes::iload:
+		state->push(syms->intType);
+		break;
+	case ByteCodes::lload:
+		state->push(syms->longType);
+		break;
+	case ByteCodes::fload:
+		state->push(syms->floatType);
+		break;
+	case ByteCodes::dload:
+		state->push(syms->doubleType);
+		break;
+	case ByteCodes::aload:
+		state->push(lvs[od]->vsym->type);
+		break;
+	case ByteCodes::lstore:
+	case ByteCodes::dstore:
+		state->pop(2);
+		break;
+	case ByteCodes::istore:
+	case ByteCodes::fstore:
+	case ByteCodes::astore:
+		state->pop(1);
+		break;
+	case ByteCodes::ret:
+		markDead();
+		break;
+	default:
+		cout << ByteCodes::getCodeStr(op) << "  不应该出现在emitop1w" <<endl;
+	}
+
 }
+/**
+ * 两个操作数
+ * 可带wide
+ * od1:局部变量表index
+ * od2:第二操作数
+ */
 void Code::emitop1w(int op, int od1, int od2) {
+
+	if(od1>0xFF||od2<-128||od2>127){
+		emitop(ByteCodes::wide);
+		emitop(op);
+		emit2(od1);
+		emit2(od2);
+	}else{
+		emitop(op);
+		emit1(od1);
+		emit1(od2);
+	}
+	if(!alive)
+		return;
+	switch(op){
+	case ByteCodes::iinc:
+		break;
+	default:
+		cout << ByteCodes::getCodeStr(op) << "  不应该出现在emitop1w(双操作数)" <<endl;
+	}
 }
 void Code::emitop2(int op, int od) {
+	emitop(op);
+	if (!alive)
+		return;
+	emit2(od);
+	void* o;
+	switch (op) {
+	case ByteCodes::getstatic:		//od为常量池中index
+		state->push(((Symbol*) (pool->pool[od]))->type);
+		break;
+	case ByteCodes::putstatic:		//od为常量池中index
+		state->pop(((Symbol*) (pool->pool[od]))->type);
+		break;
+	case ByteCodes::new_:
+		//new仅分配对象所需空间，紧接着调用构造方法初始化
+		state->push(((Symbol*) (pool->pool[od]))->type);
+		break;
+	case ByteCodes::sipush:
+		state->push(syms->intType);
+		break;
+	case ByteCodes::if_acmp_null:
+	case ByteCodes::if_acmp_nonnull:
+	case ByteCodes::ifeq:
+	case ByteCodes::ifne:
+	case ByteCodes::iflt:
+	case ByteCodes::ifge:
+	case ByteCodes::ifgt:
+	case ByteCodes::ifle:
+		state->pop(1);
+		break;
+	case ByteCodes::if_icmpeq:
+	case ByteCodes::if_icmpne:
+	case ByteCodes::if_icmplt:
+	case ByteCodes::if_icmpge:
+	case ByteCodes::if_icmpgt:
+	case ByteCodes::if_icmple:
+	case ByteCodes::if_acmpeq:
+	case ByteCodes::if_acmpne:
+		state->pop(2);
+		break;
+	case ByteCodes::goto_:
+		markDead();
+	case ByteCodes::getfield:
+		state->push(((Symbol*) (pool->pool[od]))->type);
+		break;
+	case ByteCodes::putfield:
+		state->pop(((Symbol*) (pool->pool[od]))->type);
+		break;
+	case ByteCodes::checkcast:
+		state->pop(1);
+		o = pool->pool[od];
+		if (static_cast<Symbol*>(o)) {
+			state->push(static_cast<Symbol*>(o)->type);
+		} else {
+			state->push((Type*) o);
+		}
+		break;
+
+	case ByteCodes::ldc2w:
+	case ByteCodes::ldc2:
+		state->pop(typeForPool(pool->pool[od]));
+		break;
+	case ByteCodes::instanceof_:
+		state->pop(1);
+		state->push(syms->intType);
+		break;
+	case ByteCodes::jsr:
+		break;
+	default:
+		cout << ByteCodes::getCodeStr(op) << "  不应该出现在emitop2" << endl;
+	}
 }
 void Code::emitop4(int op, int od) {
+	emitop(op);
+	if (!alive)
+		return;
+	emit4(od);
+	switch (op) {
+	case ByteCodes::goto_w:
+		markDead();
+		break;
+	case ByteCodes::jsr_w:
+		break;
+	default:
+		cout << ByteCodes::getCodeStr(op) << "  不应该出现在emitop4" << endl;
+	}
 }
 
 void Code::emit1(int op) {

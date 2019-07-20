@@ -8,11 +8,15 @@
 #ifndef JVM_POOL_HPP_
 #define JVM_POOL_HPP_
 #include "../util/HashMap.h"
+
+
+class Code;
 /**
  * 常量池
  */
 class Pool{
 public:
+	friend class Code;
 	Pool(){
 		pp= 1;
 		size = 16;

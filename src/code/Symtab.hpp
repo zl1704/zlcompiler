@@ -32,6 +32,7 @@ public:
 
  	Type* rootType;
  	Type* objectType;
+ 	Type* classType;
 	Type* stringType;
 	Type* byteType;
 	Type* charType;

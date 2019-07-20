@@ -65,7 +65,7 @@ Symtab::Symtab() {
 	voidType = new NoType(TypeTags::VOID);
 	stringType = new Type(TypeTags::STRING,NULL);
 	objectType = new ClassType(NULL);
-
+	classType = new ClassType(NULL);
 //	noType = new NoType(TypeTags::NONE);
 	unknownType = new NoType(TypeTags::UNKNOWN);
 	rootType = new Type(TypeTags::ROOT,NULL);

@@ -210,6 +210,7 @@ public:
 private:
 	vector<vector<int> > lineInfo;
 	Source* source;
+	Type* typeForPool(void* cd);
 };
 
 /**
