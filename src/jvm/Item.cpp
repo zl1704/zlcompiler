@@ -14,7 +14,9 @@ Item* Item::load(){
 void  Item::store(){
 
 }
-void  Item::invoke(){}
+Item*  Item::invoke(){
+	return NULL;
+}
 void  Item::duplicate(){}
 void  Item::drop(){}
 void Item::stash(int toscode){
@@ -60,86 +62,178 @@ int Item::width(){
  * StackItem
  */
 
-Item* StackItem::load(){}
-void  StackItem::store(){}
-void  StackItem::invoke(){}
-void  StackItem::duplicate(){}
-void  StackItem::drop(){}
-//Duplicate the top word to place 3.
-void StackItem::stash(int toscode){
-//	code->emitop0()
+Item* StackItem::load(){
+	return this;
+}
+//void  StackItem::store(){}
+//void  StackItem::invoke(){}
+void StackItem::duplicate() {
+	if (width() == 2) {
+		code->emitop0(ByteCodes::dup2);
+	} else {
+		code->emitop0(ByteCodes::dup);
+
+	}
+}
+void StackItem::drop() {
+	if (width() == 2) {
+		code->emitop0(ByteCodes::pop2);
+	} else {
+		code->emitop0(ByteCodes::pop);
+
+	}
+}
+/*
+ * dup_x1,x2 dup2_x1,x2
+ * 根据toscode决定使用dup_x ，dup2_x
+ */
+void StackItem::stash(int toscode) {
+	if (width() == 2) {
+		code->emitop0(ByteCodes::dup2_x2 + 3 * (Code::width(toscode) - 1));
+	} else {
+		code->emitop0(ByteCodes::dup2_x1 + 3 * (Code::width(toscode) - 1));
+
+	}
 }
 int StackItem::width(){
 	return Code::width(typecode);
 }
 /**
  *  IndexedItem
+ *  数组访问
  */
-Item* IndexedItem::load(){}
-void  IndexedItem::store(){}
-void  IndexedItem::invoke(){}
-void  IndexedItem::duplicate(){}
-void  IndexedItem::drop(){}
-void IndexedItem::stash(int toscode){}
-Item* IndexedItem::coerce(int targetcode){}
-Item* IndexedItem::coerce(Type* targettype){}
-int IndexedItem::width(){}
+Item* IndexedItem::load(){
+	code->emitop0(ByteCodes::iaload + typecode);
+	return items->stackItem[typecode];
+}
+void  IndexedItem::store(){
+	code->emitop0(ByteCodes::istore + typecode);
+}
+void  IndexedItem::duplicate(){
+	code->emitop0(ByteCodes::dup2);
+}
+void  IndexedItem::drop(){
+	code->emitop0(ByteCodes::pop2);
+}
+void IndexedItem::stash(int toscode){
+	 code->emitop0(ByteCodes::dup_x2 + 3 * (Code::width(toscode) - 1));
+}
+//Item* IndexedItem::coerce(int targetcode){}
+//Item* IndexedItem::coerce(Type* targettype){}
+int IndexedItem::width(){
+	return 2;
+}
 
 /**
  *  SelfItem
  */
-Item* SelfItem::load(){}
-void  SelfItem::store(){}
-void  SelfItem::invoke(){}
-void  SelfItem::duplicate(){}
-void  SelfItem::drop(){}
-void SelfItem::stash(int toscode){}
-Item* SelfItem::coerce(int targetcode){}
-Item* SelfItem::coerce(Type* targettype){}
-int SelfItem::width(){}
+Item* SelfItem::load(){
+	code->emitop0(ByteCodes::aload_0);
+	return items->stackItem[typecode];
+}
+//void  SelfItem::store(){}
+//void  SelfItem::invoke(){}
+//void  SelfItem::duplicate(){}
+//void  SelfItem::drop(){}
+//void SelfItem::stash(int toscode){}
+//Item* SelfItem::coerce(int targetcode){}
+//Item* SelfItem::coerce(Type* targettype){}
+//int SelfItem::width(){}
+
 /**
  *  LocalItem
  */
-Item* LocalItem::load(){}
-void  LocalItem::store(){}
-void  LocalItem::invoke(){}
-void  LocalItem::duplicate(){}
-void  LocalItem::drop(){}
-void LocalItem::stash(int toscode){}
-Item* LocalItem::coerce(int targetcode){}
-Item* LocalItem::coerce(Type* targettype){}
-int LocalItem::width(){}
+Item* LocalItem::load(){
+
+	if(reg<=3)
+		code->emitop0(ByteCodes::iload_0+Code::truncate(typecode)*4+reg);
+	else
+		code->emitop1w(ByteCodes::iload+Code::truncate(typecode),reg);
+	return items->stackItem[typecode];
+}
+void  LocalItem::store(){
+	if(reg<=3)
+		code->emitop0(ByteCodes::istore_0+Code::truncate(typecode)*4+reg);
+	else
+		code->emitop1w(ByteCodes::istore+Code::truncate(typecode),reg);
+}
+void LocalItem::incr(int x){
+	/*
+	 * op | od1(index) | od2(incr number)
+	 * 1B |   1B	   |  2B
+	 */
+	if(typecode==ByteCodes::INTcode && x>=-32768 &&x<=32767){
+		code->emitop1w(ByteCodes::iinc,reg,x);
+	}else{
+		//通过add,sub指令实现
+		load();
+		if(x>=0){
+			items->makeImmediateItem(ConstType::create(TypeTags::INT,util::toString(x)))->load();
+			code->emitop0(ByteCodes::iadd);
+		}else{
+			items->makeImmediateItem(ConstType::create(TypeTags::INT,util::toString(-x)))->load();
+
+		}
+		items->makeStackItem(code->syms->intType)->coerce(typecode);
+	}
+
+
+}
+
 /**
  * StaticItem
  */
-Item* StaticItem::load(){}
-void  StaticItem::store(){}
-void  StaticItem::invoke(){}
-void  StaticItem::duplicate(){}
-void  StaticItem::drop(){}
-void StaticItem::stash(int toscode){}
-Item* StaticItem::coerce(int targetcode){}
-Item* StaticItem::coerce(Type* targettype){}
-int StaticItem::width(){}
+Item* StaticItem::load(){
+	code->emitop2(ByteCodes::getstatic,code->pool->put(member));
+	return items->stackItem[typecode];
+}
+void  StaticItem::store(){
+	code->emitop2(ByteCodes::putstatic,code->pool->put(member));
+}
+Item*  StaticItem::invoke(){
+	//方法调用
+	MethodType* mt = (MethodType*) member->type;
+	int rescode = ByteCodes::typecode(mt->restype);
+	code->emitInvokestatic(code->pool->put(member),mt);
+	return items->stackItem[rescode];
+}
 
 /**
  * MemberItem
  */
-Item* MemberItem::load(){}
-void  MemberItem::store(){}
-void  MemberItem::invoke(){}
-void  MemberItem::duplicate(){}
-void  MemberItem::drop(){}
-void MemberItem::stash(int toscode){}
-Item* MemberItem::coerce(int targetcode){}
-Item* MemberItem::coerce(Type* targettype){}
-int MemberItem::width(){}
+Item* MemberItem::load(){
+	code->emitop2(ByteCodes::getfield, code->pool->put(member));
+	return items->stackItem[typecode];
+}
+void MemberItem::store() {
+	code->emitop2(ByteCodes::putfield, code->pool->put(member));
+}
+Item* MemberItem::invoke() {
+	//方法调用
+	MethodType* mt = (MethodType*) member->type;
+	int rescode = ByteCodes::typecode(mt->restype);
+	//没有接口和继承，全部special调用
+	code->emitInvokespecial(code->pool->put(member), mt);
+	return items->stackItem[rescode];
+}
+void  MemberItem::duplicate(){
+	items->stackItem[ByteCodes::OBJECTcode]->duplicate();
+}
+void  MemberItem::drop(){
+	items->stackItem[ByteCodes::OBJECTcode]->drop();
+}
+void MemberItem::stash(int toscode){
+	items->stackItem[ByteCodes::OBJECTcode]->stash(toscode);
+}
+int MemberItem::width(){
+	return 1;
+}
 /**
  * ImmediateItem
  */
 Item* ImmediateItem::load(){}
 void  ImmediateItem::store(){}
-void  ImmediateItem::invoke(){}
+Item*  ImmediateItem::invoke(){}
 void  ImmediateItem::duplicate(){}
 void  ImmediateItem::drop(){}
 void ImmediateItem::stash(int toscode){}
@@ -151,7 +245,7 @@ int ImmediateItem::width(){}
  */
 Item* AssinItem::load(){}
 void  AssinItem::store(){}
-void  AssinItem::invoke(){}
+Item*  AssinItem::invoke(){}
 void  AssinItem::duplicate(){}
 void  AssinItem::drop(){}
 void AssinItem::stash(int toscode){}
@@ -163,7 +257,7 @@ int AssinItem::width(){}
  */
 Item* CondItem::load(){}
 void  CondItem::store(){}
-void  CondItem::invoke(){}
+Item*  CondItem::invoke(){}
 void  CondItem::duplicate(){}
 void  CondItem::drop(){}
 void CondItem::stash(int toscode){}

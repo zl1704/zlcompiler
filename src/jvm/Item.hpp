@@ -19,6 +19,7 @@ class Item{
 public:
 	int typecode;
 	Code* code;
+	Items* items;
 	Item(){}
 	Item(int typecode,Code* code){
 		this->typecode = typecode;
@@ -28,7 +29,7 @@ public:
 
 	virtual Item* load();
 	virtual void  store();
-	virtual void  invoke();
+	virtual Item*  invoke();
 	virtual void  duplicate();
 	virtual void  drop();
 	virtual void stash(int toscode);
@@ -36,8 +37,7 @@ public:
 	Item* coerce(Type* targettype);
 	virtual CondItem* mkCond();
 	int width();
-private :
-	Items* items;
+
 };
 
 class StackItem:public Item{
@@ -45,7 +45,6 @@ public:
 	StackItem(int typecode,Code* code):Item(typecode,code){}
 	virtual Item* load();
     virtual void  store();
-    virtual void  invoke();
 	virtual void  duplicate();
 	virtual void  drop();
 	virtual void stash(int toscode);
@@ -60,12 +59,11 @@ public:
 	IndexedItem(Type* type,Code* code):Item(ByteCodes::typecode(type),code){}
 	virtual Item* load();
 	virtual void  store();
-	virtual void  invoke();
 	virtual void  duplicate();
 	virtual void  drop();
 	virtual void stash(int toscode);
-	virtual Item* coerce(int targetcode);
-	Item* coerce(Type* targettype);
+//	virtual Item* coerce(int targetcode);
+//	Item* coerce(Type* targettype);
 	int width();
 };
 
@@ -76,14 +74,14 @@ public:
 		this->isSuper = isSuper;
 	}
 	virtual Item* load();
-	virtual void  store();
-	virtual void  invoke();
-	virtual void  duplicate();
-	virtual void  drop();
-	virtual void stash(int toscode);
-	virtual Item* coerce(int targetcode);
-	Item* coerce(Type* targettype);
-	int width();
+//	virtual void  store();
+//	virtual void  invoke();
+//	virtual void  duplicate();
+//	virtual void  drop();
+//	virtual void stash(int toscode);
+//	virtual Item* coerce(int targetcode);
+//	Item* coerce(Type* targettype);
+//	int width();
 
 };
 
@@ -97,13 +95,14 @@ public:
 	}
 	virtual Item* load();
 	virtual void  store();
-	virtual void  invoke();
-	virtual void  duplicate();
-	virtual void  drop();
-	virtual void stash(int toscode);
-	virtual Item* coerce(int targetcode);
-	Item* coerce(Type* targettype);
-	int width();
+	void incr(int x);
+//	virtual void  invoke();
+//	virtual void  duplicate();
+//	virtual void  drop();
+//	virtual void stash(int toscode);
+//	virtual Item* coerce(int targetcode);
+//	Item* coerce(Type* targettype);
+//	int width();
 
 };
 /**
@@ -113,18 +112,19 @@ class StaticItem:public Item{
 
 public:
 	Symbol* member;
+	bool nonvirtual;
 	StaticItem(Symbol* member,Code* code):Item(ByteCodes::typecode(member->type),code){
 		this->member = member;
 	}
 	virtual Item* load();
 	virtual void  store();
-	virtual void  invoke();
-	virtual void  duplicate();
-	virtual void  drop();
-	virtual void stash(int toscode);
-	virtual Item* coerce(int targetcode);
-	Item* coerce(Type* targettype);
-	int width();
+	virtual Item*  invoke();
+//	virtual void  duplicate();
+//	virtual void  drop();
+//	virtual void stash(int toscode);
+//	virtual Item* coerce(int targetcode);
+//	Item* coerce(Type* targettype);
+//	int width();
 };
 /**
  * 实例变量或方法
@@ -137,12 +137,10 @@ public:
 	}
 	virtual Item* load();
 	virtual void  store();
-	virtual void  invoke();
+	virtual Item*  invoke();
 	virtual void  duplicate();
 	virtual void  drop();
 	virtual void stash(int toscode);
-	virtual Item* coerce(int targetcode);
-	Item* coerce(Type* targettype);
 	int width();
 };
 
@@ -154,7 +152,7 @@ public:
 	}
 	virtual Item* load();
 	virtual void  store();
-	virtual void  invoke();
+	virtual Item*  invoke();
 	virtual void  duplicate();
 	virtual void  drop();
 	virtual void stash(int toscode);
@@ -172,7 +170,7 @@ public:
 	}
 	virtual Item* load();
 	virtual void  store();
-	virtual void  invoke();
+	virtual Item*  invoke();
 	virtual void  duplicate();
 	virtual void  drop();
 	virtual void stash(int toscode);
@@ -194,7 +192,7 @@ public:
 	}
 	virtual Item* load();
 	virtual void  store();
-	virtual void  invoke();
+	virtual Item*  invoke();
 	virtual void  duplicate();
 	virtual void  drop();
 	virtual void stash(int toscode);
@@ -207,6 +205,14 @@ public:
 class Items{
 public:
 	friend class Item;
+	friend class CondItem;
+	friend class StaticItem;
+	friend class AssinItem;
+	friend class ImmediateItem;
+	friend class MemberItem;
+	friend class IndexedItem;
+	friend class SelfItem;
+	friend class LocalItem;
 	Pool* pool;
 	Code* code;
 	Items(Pool* pool,Code* code){
