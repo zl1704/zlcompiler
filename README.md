@@ -18,14 +18,20 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 
 
 + addLocalVar(VarSymbol* v) 
+
 	添加一个局部变量到表中 
 + void setDefined(int adr) 
+
 	标记adr寄存器 
 + void endScopes(int adr) addLineNumber(int startPc,int lineNumber) statBegin(int pos)	   
+
 	从局部变量表中删除adr之后寄存器中的变量 
-+ markStatBegin() 		 
++ markStatBegin()
+ 		 
 	行号与字节码映射，用于Debug调试 
-+ emit相关方法：输出字节码指令
++ emit相关方法：
+
+	输出字节码指令
 
 ### Gen
 
