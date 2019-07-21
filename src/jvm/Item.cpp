@@ -231,27 +231,133 @@ int MemberItem::width(){
 /**
  * ImmediateItem
  */
-Item* ImmediateItem::load(){}
-void  ImmediateItem::store(){}
-Item*  ImmediateItem::invoke(){}
-void  ImmediateItem::duplicate(){}
-void  ImmediateItem::drop(){}
-void ImmediateItem::stash(int toscode){}
-Item* ImmediateItem::coerce(int targetcode){}
-Item* ImmediateItem::coerce(Type* targettype){}
-int ImmediateItem::width(){}
+//load from constant pool
+void ImmediateItem::ldc(){
+	int index = code->pool->put(ctype,Pool::POOL_TYPE);
+	if(typecode == ByteCodes::LONGcode || typecode == ByteCodes::DOUBLEcode){
+		//2 byte ,数据占两个位置
+		code->emitop2(ByteCodes::ldc2w,index);
+	}else if(index<255){
+		code->emitop(ByteCodes::ldc1,index);
+	}else{
+		//索引超过255的，
+		code->emitop2(ByteCodes::ldc2,index);
+	}
+
+}
+bool ImmediateItem::isPosZero(jfloat x){
+	 return x == 0.0f && 1.0f / x > 0.0f;
+}
+bool ImmediateItem::isPosZero(jdouble x){
+	return x == 0.0d && 1.0d / x > 0.0d;
+}
+CondItem* ImmediateItem::mkCond() {
+	int ival = util::strToNum<int>(ctype->str);
+	if (ival != 0) {
+		return items->makeCondItem(ByteCodes::dontgoto, NULL, NULL);
+
+	} else {
+		return items->makeCondItem(ByteCodes::goto_, NULL, NULL);
+
+	}
+}
+Item* ImmediateItem::load(){
+	jint ival;
+	jlong lval;
+	jfloat fval;
+	jdouble dval;
+	switch(typecode){
+	case ByteCodes::BYTEcode:
+	case ByteCodes::CHARcode:
+	case ByteCodes::SHORTcode:
+	case ByteCodes::INTcode:
+		ival = util::strToNum<jint>(ctype->str);
+		if (ival >= -1 && ival <= 5)
+			code->emitop0(ByteCodes::iconst_0 + ival);
+		else if (-128 <= ival && ival <= 127)
+			code->emitop1(ByteCodes::bipush, ival);
+		else if (-32768 <= ival && ival <= 32767)
+			code->emitop1w(ByteCodes::sipush, ival);
+		else
+			ldc();  //从常量池中获取
+		break;
+	case ByteCodes::LONGcode:
+		lval = util::strToNum<jlong>(ctype->str);
+		if (lval == 0 || lval == 1)
+			code->emitop0(ByteCodes::lconst_0 + lval);
+		else
+			ldc();
+		break;
+	case ByteCodes::FLOATcode:
+		fval = util::strToNum<jfloat>(ctype->str);
+		if (isPosZero(fval) || fval == 1.0 || fval == 2.0)
+			code->emitop0(ByteCodes::fconst_0 + (int) fval);
+		else
+			ldc();
+		break;
+	case ByteCodes::FLOATcode:
+		dval = util::strToNum<jdouble>(ctype->str);
+		if (isPosZero(dval) || dval == 1.0)
+			code->emitop0(ByteCodes::dconst_0 + (int) dval);
+		else
+			ldc();
+		break;
+	case ByteCodes::OBJECTcode:
+		ldc();
+		break;
+	}
+	return items->stackItem[typecode];
+}
+Item* ImmediateItem::coerce(int targetcode) {
+	if (typecode == targetcode) {
+		return this;
+	}
+
+	switch (targetcode) {
+	case ByteCodes::INTcode:
+		if (Code::truncate(typecode) == ByteCodes::INTcode)
+			return this;
+		else
+			return items->makeImmediateItem(
+					ConstType::create(TypeTags::INT, ctype->str));
+	case ByteCodes::LONGcode:
+		return items->makeImmediateItem(
+				ConstType::create(TypeTags::LONG, ctype->str));
+	case ByteCodes::DOUBLEcode:
+		return items->makeImmediateItem(
+				ConstType::create(TypeTags::LONG, ctype->str));
+	case ByteCodes::FLOATcode:
+		return items->makeImmediateItem(
+				ConstType::create(TypeTags::LONG, ctype->str));
+	case ByteCodes::CHARcode:
+		return items->makeImmediateItem(
+				ConstType::create(TypeTags::LONG, ctype->str));
+	case ByteCodes::SHORTcode:
+		return items->makeImmediateItem(
+				ConstType::create(TypeTags::LONG, ctype->str));
+	case ByteCodes::BYTEcode:
+		return items->makeImmediateItem(
+				ConstType::create(TypeTags::LONG, ctype->str));
+	default:
+		return Item::coerce(targetcode);
+
+	}
+
+}
 /**
  * AssinItem
  */
 Item* AssinItem::load(){}
-void  AssinItem::store(){}
-Item*  AssinItem::invoke(){}
 void  AssinItem::duplicate(){}
 void  AssinItem::drop(){}
-void AssinItem::stash(int toscode){}
+void AssinItem::stash(int toscode){
+	cout << "错误调用！！！" <<endl;
+}
 Item* AssinItem::coerce(int targetcode){}
 Item* AssinItem::coerce(Type* targettype){}
-int AssinItem::width(){}
+int AssinItem::width(){
+	return lhs->width() + Code::width(typecode);
+}
 /**
  * CondItem
  */

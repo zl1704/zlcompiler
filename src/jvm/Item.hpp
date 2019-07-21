@@ -147,18 +147,17 @@ public:
 class ImmediateItem :public Item{
 public:
 	Literal * literal;
-	ImmediateItem(Type* type,Code* code):Item(ByteCodes::typecode(type),code){
-		this->literal = literal;
+	ConstType * ctype;
+	ImmediateItem(ConstType* type,Code* code):Item(ByteCodes::typecode(type),code){
+		this->ctype = type;
 	}
 	virtual Item* load();
-	virtual void  store();
-	virtual Item*  invoke();
-	virtual void  duplicate();
-	virtual void  drop();
-	virtual void stash(int toscode);
 	virtual Item* coerce(int targetcode);
-	Item* coerce(Type* targettype);
-	int width();
+	CondItem* mkCond();
+private :
+	void ldc();
+	bool isPosZero(jfloat x);
+	bool isPosZero(jdouble x);
 };
 
 class AssinItem:public Item{
@@ -244,7 +243,7 @@ public:
 		return new MemberItem(s,code);
 	}
 
-	ImmediateItem* makeImmediateItem(Type* type){
+	ImmediateItem* makeImmediateItem(ConstType* type){
 		return new ImmediateItem(type,code);
 	}
 

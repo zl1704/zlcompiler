@@ -833,6 +833,7 @@ void Code::emitop1w(int op, int od1, int od2) {
 		cout << ByteCodes::getCodeStr(op) << "  不应该出现在emitop1w(双操作数)" <<endl;
 	}
 }
+
 void Code::emitop2(int op, int od) {
 	emitop(op);
 	if (!alive)

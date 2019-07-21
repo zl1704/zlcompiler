@@ -16,6 +16,8 @@ class Code;
  */
 class Pool{
 public:
+	static int POOL_SYM = 1;
+	static int POOL_TYPE = POOL_SYM+1;
 	friend class Code;
 	Pool(){
 		pp= 1;
@@ -28,11 +30,12 @@ public:
 	int numEntries(){
 		return pp;
 	}
-	int put(void* value){
+	int put(void* value,int type = POOL_SYM){
 		int index= map->get(value);
 		if(index==NULL){
 			index = pp;
 			map->put(value,index);
+			typeMap->put(value,type);
 			if(pp==size)dble();
 			pool[pp++]= value;
 			// Long 和Double 情况要多空出一个位置
@@ -48,6 +51,10 @@ public:
 		}
 		return index;
 	}
+	int getType(void* o){
+		int type = typeMap->get(o);
+		return type == NULL?-1:type;
+	}
 	int get(void* o){
 		int index = map->get(o);
 		return index ==NULL?-1:index;
@@ -59,8 +66,9 @@ private :
 	//常量池大小
 	int size;
 	void** pool;
-	//为了快速常量池中对象
+	//为了快速获取常量池中对象
 	HashMap<void*,int>* map;
+	HashMap<void*,int>* typeMap;//存放类型
 
 	void dble(){
 		void** new_pool = new void*[size*2];

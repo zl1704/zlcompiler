@@ -80,7 +80,7 @@ CondItem* Gen::genCond(Tree* tree){
 Item* Gen::genExpr(Tree* tree ,Type* pt){
 	Type* prept = this->pt;
 	if(tree->type->isConst()){
-		result = items->makeImmediateItem(tree->type);
+		result = items->makeImmediateItem((ConstType*)tree->type);
 	}else{
 		this->pt = pt;
 		tree->accept(this);
