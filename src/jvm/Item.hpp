@@ -168,13 +168,9 @@ public:
 		this->lhs = lhs;
 	}
 	virtual Item* load();
-	virtual void  store();
-	virtual Item*  invoke();
 	virtual void  duplicate();
 	virtual void  drop();
 	virtual void stash(int toscode);
-	virtual Item* coerce(int targetcode);
-	Item* coerce(Type* targettype);
 	int width();
 };
 
@@ -190,14 +186,17 @@ public:
 		this->opcode = opcode;
 	}
 	virtual Item* load();
-	virtual void  store();
-	virtual Item*  invoke();
-	virtual void  duplicate();
 	virtual void  drop();
+	void  duplicate();
 	virtual void stash(int toscode);
-	virtual Item* coerce(int targetcode);
-	Item* coerce(Type* targettype);
-	int width();
+	CondItem* mkCond();
+	CondItem* negate();
+	Chain* jumpFalse();
+	Chain* jumpTrue();
+	bool isTrue();
+	bool isFalse();
+
+
 };
 
 

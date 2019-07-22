@@ -89,9 +89,10 @@ void StackItem::drop() {
  */
 void StackItem::stash(int toscode) {
 	if (width() == 2) {
-		code->emitop0(ByteCodes::dup2_x2 + 3 * (Code::width(toscode) - 1));
+
+		code->emitop0(ByteCodes::dup_x2 + 3 * (Code::width(toscode) - 1));
 	} else {
-		code->emitop0(ByteCodes::dup2_x1 + 3 * (Code::width(toscode) - 1));
+		code->emitop0(ByteCodes::dup_x1 + 3 * (Code::width(toscode) - 1));
 
 	}
 }
@@ -238,7 +239,7 @@ void ImmediateItem::ldc(){
 		//2 byte ,数据占两个位置
 		code->emitop2(ByteCodes::ldc2w,index);
 	}else if(index<255){
-		code->emitop(ByteCodes::ldc1,index);
+		code->emitop1(ByteCodes::ldc1,index);
 	}else{
 		//索引超过255的，
 		code->emitop2(ByteCodes::ldc2,index);
@@ -295,7 +296,7 @@ Item* ImmediateItem::load(){
 		else
 			ldc();
 		break;
-	case ByteCodes::FLOATcode:
+	case ByteCodes::DOUBLEcode:
 		dval = util::strToNum<jdouble>(ctype->str);
 		if (isPosZero(dval) || dval == 1.0)
 			code->emitop0(ByteCodes::dconst_0 + (int) dval);
@@ -347,26 +348,81 @@ Item* ImmediateItem::coerce(int targetcode) {
 /**
  * AssinItem
  */
-Item* AssinItem::load(){}
-void  AssinItem::duplicate(){}
-void  AssinItem::drop(){}
+Item* AssinItem::load(){
+
+	lhs->stash(typecode);
+	lhs->store();
+	return items->stackItem[typecode];
+
+}
+void  AssinItem::duplicate(){
+	load()->duplicate();
+}
+void  AssinItem::drop(){
+	lhs->store();
+}
 void AssinItem::stash(int toscode){
 	cout << "错误调用！！！" <<endl;
 }
-Item* AssinItem::coerce(int targetcode){}
-Item* AssinItem::coerce(Type* targettype){}
 int AssinItem::width(){
 	return lhs->width() + Code::width(typecode);
 }
 /**
  * CondItem
  */
-Item* CondItem::load(){}
-void  CondItem::store(){}
-Item*  CondItem::invoke(){}
-void  CondItem::duplicate(){}
-void  CondItem::drop(){}
+//这里暂时不太明白
+Item* CondItem::load(){
+
+	Chain* trueChain = NULL;
+	Chain* falseChain = jumpFalse();
+	if(!isFalse()){
+		code->resolve(trueJumps);
+		code->emitop0(ByteCodes::iconst_1);//?
+		trueChain = code->branch(ByteCodes::goto_);
+	}
+	if(falseChain!=NULL){
+		code->resolve(falseChain);
+		code->emitop0(ByteCodes::iconst_0);
+	}
+	code->resolve(trueChain);
+	return StackItem[typecode];
+}
+void  CondItem::drop(){
+	load()->drop();
+}
 void CondItem::stash(int toscode){}
-Item* CondItem::coerce(int targetcode){}
-Item* CondItem::coerce(Type* targettype){}
-int CondItem::width(){}
+void  CondItem::duplicate(){
+	load()->duplicate();
+}
+CondItem* CondItem::mkCond(){
+	return this;
+}
+CondItem* CondItem::negate(){
+
+	CondItem* c = items->makeCondItem(Code::negate(opcode),falseJumps,trueJumps);
+	c->tree = tree;
+	return c;
+}
+Chain* CondItem::jumpFalse(){
+
+	if(tree == NULL)
+		return Chain::merge(falseJumps,code->branch(opcode));
+	int startpc = code->curPc();
+	Chain* c = Chain::merge(falseJumps,code->branch(opcode));
+	return c;
+}
+Chain* CondItem::jumpTrue(){
+	if (tree == NULL)
+		return Chain::merge(trueJumps, code->branch(opcode));
+	int startpc = code->curPc();
+	Chain* c = Chain::merge(trueJumps, code->branch(opcode));
+	return c;
+}
+
+
+bool CondItem::isTrue(){
+	return falseJumps== NULL && opcode == ByteCodes::goto_;
+}
+bool CondItem::isFalse(){
+	return trueJumps== NULL && opcode == ByteCodes::dontgoto;
+}

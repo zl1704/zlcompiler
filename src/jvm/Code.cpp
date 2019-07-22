@@ -161,6 +161,16 @@ int Code::truncate(int tc) {
 		return tc;
 	}
 }
+//取反操作
+int negate(int opcode){
+
+	if (opcode == ByteCodes::if_acmp_null)
+		return ByteCodes::if_acmp_nonnull;
+	else if (opcode == ByteCodes::if_acmp_nonnull)
+		return ByteCodes::if_acmp_null;
+	else
+		return ((opcode + 1) ^ 1) - 1;
+}
 
 int Code::width(int tc) {
 	switch (tc) {
@@ -201,6 +211,13 @@ void Code::resolvePending() {
 }
 //回填
 void Code::resolve(Chain* c, int target) {
+
+}
+void Code::resolve(Chain* c){
+	Chain::merge(c,pendingJumps);
+}
+
+Chain* Code::branch(int opcode){
 
 }
 

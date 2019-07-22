@@ -16,8 +16,8 @@ class Code;
  */
 class Pool{
 public:
-	static int POOL_SYM = 1;
-	static int POOL_TYPE = POOL_SYM+1;
+	static const int POOL_SYM = 1;
+	static const int POOL_TYPE = POOL_SYM+1;
 	friend class Code;
 	Pool(){
 		pp= 1;

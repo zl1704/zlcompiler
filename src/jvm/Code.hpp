@@ -143,11 +143,15 @@ public:
 	void checkCode();
 	//byte short  char int ---> int
 	static int truncate(int tc);
+	static int negate(int opcode);
 	int curPc();
 	void resolvePending();
-	void resolve(Chain* c);
 	//回填跳转链
 	void resolve(Chain* c,int target);
+	//point to current code pointer.
+	void resolve(Chain* c);
+
+	Chain* branch(int opcode);
 	//对象长度
 	static int width(int tc);
 	static int width(Type* type);
@@ -166,7 +170,7 @@ public:
 	inline void markAlive(){
 		alive = true;
 	}
-	void markDead(){
+	inline void markDead(){
 		alive = false;
 	}
 
