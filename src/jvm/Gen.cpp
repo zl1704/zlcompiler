@@ -72,6 +72,7 @@ void Gen::genArgs(vector<Expression*> trees, vector<Type*> ts){
 
 CondItem* Gen::genCond(Tree* tree){
 
+
 	return NULL;
 }
 /**
@@ -89,6 +90,41 @@ Item* Gen::genExpr(Tree* tree ,Type* pt){
 	return result->coerce(pt);
 
 }
+/**
+ * 三种循环方式
+ *  for: let,cond,body,step
+ *  while:cond,body
+ *  do-while:body,cond
+ */
+
+
+void Gen::genLoop(Statement* loop, Statement* body, Expression* cond,
+		vector<ExpressionStatement*> step, bool testFirst) {
+
+	Env<GenContext* > loopEnv = env->dup(loop,new GenContext());
+	int startpc = code->entryPoint();
+	if(testFirst){
+		CondItem* c;
+		if(cond != NULL){
+			code ->state(cond->pos);
+			c = genCond(Check::skipParens(cond));
+		}else{
+			//没有条件直接goto  无test的for
+			c = items->makeCondItem(ByteCodes::goto_);
+		}
+		//false跳转
+		Chain* loopDone = c->jumpFalse();
+		//true label
+
+
+	}else{
+
+
+
+	}
+
+}
+
 
 
 /**
@@ -277,6 +313,13 @@ void Gen::visitMethodDef(MethodDecl* tree) {
 	//delete localEnv;
 }
 void Gen::visitVarDef(VariableDecl* tree) {
+	VarSymbol* v= tree->sym;
+	code->newLocalVar(v);
+	//右值不为空，生成赋值语句
+	if(tree->init!=NULL){
+		genExpr(tree->init,v->type)->load();
+		items->makeLocalItem(v)->store();
+	}
 }
 void Gen::visitSkip(Skip* tree) {
 }

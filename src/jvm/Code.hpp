@@ -145,6 +145,7 @@ public:
 	static int truncate(int tc);
 	static int negate(int opcode);
 	int curPc();
+	int entryPoint();
 	void resolvePending();
 	//回填跳转链
 	void resolve(Chain* c,int target);
@@ -185,7 +186,7 @@ public:
 	void emitInvokespecial(int meth,Type* mtype);
 	void emitInvokestatic(int meth,Type* mtype);
 	void emitInvokevirtual(int meth, Type mtype);
-	void emitJump(int op);
+	int emitJump(int op);
 	void emitop0(int op);
 	void emitop1(int op,int od);
 	void emitop1w(int op,int od);

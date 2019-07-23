@@ -405,11 +405,11 @@ CondItem* CondItem::negate(){
 }
 Chain* CondItem::jumpFalse(){
 
-	if(tree == NULL)
+//	if(tree == NULL)
 		return Chain::merge(falseJumps,code->branch(opcode));
-	int startpc = code->curPc();
-	Chain* c = Chain::merge(falseJumps,code->branch(opcode));
-	return c;
+//	int startpc = code->curPc();
+//	Chain* c = Chain::merge(falseJumps,code->branch(opcode));
+//	return c;
 }
 Chain* CondItem::jumpTrue(){
 	if (tree == NULL)

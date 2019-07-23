@@ -203,6 +203,13 @@ int Code::curPc() {
 	//fixedPc = true;
 	return cp;
 }
+int Code::entryPoint(){
+
+	int pc = curPc();
+	alive = true;
+	return pc;
+}
+
 void Code::resolvePending() {
 	Chain* c = pendingJumps;
 	pendingJumps = NULL;
@@ -210,7 +217,45 @@ void Code::resolvePending() {
 
 }
 //回填
+//！！！
 void Code::resolve(Chain* c, int target) {
+	bool changed = false;
+	State* newState = state;
+	for(;c!=NULL;c = c->next){
+
+		if(target>cp)
+			target = cp;
+		else if(get1(target)==ByteCodes::goto_){
+			//target是跳转指令，无需跳到这里
+			target = target + get2(target+1);
+		}
+		//target为goto(chain)下条指令无需跳转，且跳转到target
+		if(get1(c->pc) == ByteCodes::goto_ && c->pc+3 == target && target == cp && !fixedPc){
+			//删除当前指令
+			cp = cp-3;
+			target = target -3;
+			if(c->next == NULL){
+				alive = true;
+				break;
+			}
+		}else{
+			put2(c->pc+1,target-c->pc);
+
+		}
+		fixedpc = true;
+		if(target == cp){
+			changed = true;
+			//...
+			if(alive){
+
+			}else{
+
+			}
+
+		}
+
+
+	}
 
 }
 void Code::resolve(Chain* c){
@@ -219,6 +264,18 @@ void Code::resolve(Chain* c){
 
 Chain* Code::branch(int opcode){
 
+	Chain* result = NULL;
+	if(opcode == ByteCodes::goto_){
+		result = pendingJumps;
+		pendingJumps = NULL;
+	}
+	if(opcode!= ByteCodes::dontgoto && isAlive()){
+		result = new Chain(emitJump(opcode),result,state->dup());
+		if(opcode==ByteCodes::goto_)
+			alive = false;
+
+	}
+	return result;
 }
 
 /**
@@ -344,7 +401,10 @@ void Code::emitInvokestatic(int meth, Type* mtype) {
 void Code::emitInvokevirtual(int meth, Type mtype) {
 
 }
-void Code::emitJump(int op) {
+int Code::emitJump(int op) {
+	//等待回填
+	emitop2(op,0);
+	return cp-3;
 }
 /**
  * 输出一个无操作数的操作码,并管理栈中状态(TOS)
@@ -940,6 +1000,9 @@ void Code::emitop4(int op, int od) {
 }
 
 void Code::emit1(int op) {
+	if(util::debug){
+		cout << "Gen :\t " << ByteCodes::getCodeStr(op)<< endl;
+	}
 	if (!alive)
 		return;
 	checkCode();

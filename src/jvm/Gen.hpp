@@ -57,7 +57,7 @@ public:
 	void genArgs(vector<Expression*> trees,vector<Type* > ts);
 	CondItem* genCond(Tree* tree);
 	Item* genExpr(Tree* tree ,Type* pt);
-
+	void genLoop(Statement* loop,Statement* body,Expression* cond,vector<ExpressionStatement*> step,bool testFirst);
 
 	/**
 	 * other method
