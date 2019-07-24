@@ -42,6 +42,19 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 
 	进入方法，生成code
 
++ genLoop
+
+	循环的翻译，有两种循环，whlie(for循环:init+while), do-while
+	
+	1. while:
+			1. 生成cond语句
+			2. 生成false跳转语句
+			3. 回填true跳转
+			4. 生成body语句
+			5. 生成跳转并回填跳转到循环开始
+			6. 回填循环出口(false跳转)
+	
+	2. do-while与while形式类似，不同的地方在于生成cond的地方在body之后，然后并回填true,false跳转链
 	
 	
 
