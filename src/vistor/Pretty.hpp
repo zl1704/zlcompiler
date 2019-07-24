@@ -116,6 +116,7 @@ private:
 			cout << s;
 	}
 
+	void printConst(int type,string val);
 	inline void align(){
 	        for (int i = 0; i < lmargin; i++)cout <<" ";
 	    }

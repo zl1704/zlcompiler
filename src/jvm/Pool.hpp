@@ -25,6 +25,7 @@ public:
 		pool = new void*[size];
 		memset(pool,NULL,size*sizeof(void*));
 		map = new HashMap<void*,int>();
+		typeMap  = new HashMap<void*,int>();
 
 	}
 	int numEntries(){

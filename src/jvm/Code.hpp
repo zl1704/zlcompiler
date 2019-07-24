@@ -225,7 +225,8 @@ class Chain{
 public:
 	int pc;
 	Chain *next;
-	Chain(int pc,Chain* next);
+	State* state;
+	Chain(int pc,Chain* next,State* state);
 	//合并两个跳转链
 	static Chain* merge(Chain* c1,Chain* c2);
 

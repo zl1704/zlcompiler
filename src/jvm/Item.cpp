@@ -385,7 +385,7 @@ Item* CondItem::load(){
 		code->emitop0(ByteCodes::iconst_0);
 	}
 	code->resolve(trueChain);
-	return StackItem[typecode];
+	return items->stackItem[typecode];
 }
 void  CondItem::drop(){
 	load()->drop();
@@ -403,10 +403,13 @@ CondItem* CondItem::negate(){
 	c->tree = tree;
 	return c;
 }
+/**
+ * 当前输出一个跳转指令，并与false链合并
+ */
 Chain* CondItem::jumpFalse(){
 
 //	if(tree == NULL)
-		return Chain::merge(falseJumps,code->branch(opcode));
+		return Chain::merge(falseJumps,code->branch(Code::negate(opcode)));
 //	int startpc = code->curPc();
 //	Chain* c = Chain::merge(falseJumps,code->branch(opcode));
 //	return c;

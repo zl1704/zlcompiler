@@ -162,7 +162,7 @@ int Code::truncate(int tc) {
 	}
 }
 //取反操作
-int negate(int opcode){
+int Code::negate(int opcode){
 
 	if (opcode == ByteCodes::if_acmp_null)
 		return ByteCodes::if_acmp_nonnull;
@@ -242,7 +242,7 @@ void Code::resolve(Chain* c, int target) {
 			put2(c->pc+1,target-c->pc);
 
 		}
-		fixedpc = true;
+		fixedPc = true;
 		if(target == cp){
 			changed = true;
 			//...
@@ -300,7 +300,7 @@ void Code::addLocalVar(VarSymbol* v) {
 	state->defined->include(v->adr);
 }
 int Code::newLocalVar(VarSymbol* v) {
-	int reg = v->adr = newLocalVar(v);
+	int reg = v->adr = newLocalVar(v->type);
 	addLocalVar(v);
 	return reg;
 }
@@ -1066,10 +1066,10 @@ void Code::align(int incr) {
 /**
  *  Chain
  */
-Chain::Chain(int pc, Chain* next) {
+Chain::Chain(int pc, Chain* next,State* state) {
 	this->pc = pc;
 	this->next = next;
-
+	this->state = state;
 }
 
 Chain* Chain::merge(Chain* c1, Chain* c2) {
@@ -1079,8 +1079,8 @@ Chain* Chain::merge(Chain* c1, Chain* c2) {
 		return c1;
 	Chain* new_chain = NULL;
 	if (c1->pc < c2->pc)
-		new_chain = new Chain(c2->pc, merge(c1, c2->next));
-	new_chain = new Chain(c1->pc, merge(c1->next, c2));
+		new_chain = new Chain(c2->pc, merge(c1, c2->next),c2->state);
+	new_chain = new Chain(c1->pc, merge(c1->next, c2),c1->state);
 	delete c1;
 	delete c2;
 	return new_chain;

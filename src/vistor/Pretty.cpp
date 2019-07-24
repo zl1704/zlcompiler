@@ -592,13 +592,17 @@ void Pretty::visitUnary(Unary* tree) {
 }
 void Pretty::visitBinary(Binary* tree) {
 	try {
-		int ownprec = TreeInfo::opPrec(tree->getTag());
-		string opname = operatorName(tree->getTag());
-		open(prec, ownprec);
-		printExpr(tree->lhs, ownprec);
-		print(" " + opname + " ");
-		printExpr(tree->rhs, ownprec + 1);
-		close(prec, ownprec);
+		if(tree->type->isConst()){
+			printConst(tree->getTag(),((ConstType*)tree->type)->str);
+		}else{
+			int ownprec = TreeInfo::opPrec(tree->getTag());
+			string opname = operatorName(tree->getTag());
+			open(prec, ownprec);
+			printExpr(tree->lhs, ownprec);
+			print(" " + opname + " ");
+			printExpr(tree->rhs, ownprec + 1);
+			close(prec, ownprec);
+		}
 	} catch (exception& e) {
 		cout << "visit Binary exception: " << e.what() << endl;
 	}
@@ -652,34 +656,38 @@ void Pretty::visitIdent(Ident* tree) {
 		cout << "visit Ident exception: " << e.what() << endl;
 	}
 }
+void Pretty::printConst(int type,string val){
+	switch (type) {
+			case TypeTags::INT:
+				print(val);
+				break;
+			case TypeTags::LONG:
+				print(val + "L");
+				break;
+			case TypeTags::FLOAT:
+				print(val + "F");
+				break;
+			case TypeTags::DOUBLE:
+				print(val);
+				break;
+			case TypeTags::CHAR:
+				print("\'" + val + "\'");
+				break;
+			case TypeTags::BOOLEAN:
+				print(val=="1"?"true":"false");
+				break;
+			case TypeTags::BOT:
+				print("null");
+				break;
+			default:
+				print("\"" + val + "\"");
+				break;
+			}
+}
 void Pretty::visitLiteral(Literal* tree) {
 	try {
-		switch (tree->typetag) {
-		case TypeTags::INT:
-			print(tree->value);
-			break;
-		case TypeTags::LONG:
-			print(tree->value + "L");
-			break;
-		case TypeTags::FLOAT:
-			print(tree->value + "F");
-			break;
-		case TypeTags::DOUBLE:
-			print(tree->value);
-			break;
-		case TypeTags::CHAR:
-			print("\'" + tree->value + "\'");
-			break;
-		case TypeTags::BOOLEAN:
-			print(tree->value=="1"?"true":"false");
-			break;
-		case TypeTags::BOT:
-			print("null");
-			break;
-		default:
-			print("\"" + tree->value + "\"");
-			break;
-		}
+
+		printConst(tree->typetag,tree->value);
 	} catch (exception& e) {
 		cout << "visit Literal exception: " << e.what() << endl;
 	}

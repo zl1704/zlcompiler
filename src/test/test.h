@@ -38,9 +38,10 @@ void testmap(){
 }
 void testBits(){
 
-	Bits* bits = new Bits();
-	if(!bits->alive)
-		cout << "false"<<endl;
+	cout << util::toString(123)+util::toString("3")<<endl;
+//	Bits* bits = new Bits();
+//	if(!bits->alive)
+//		cout << "false"<<endl;
 //	cout << bits->isMember(5)<<endl;
 //	bits->include(5);
 //	cout << bits->isMember(5)<<endl;

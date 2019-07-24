@@ -44,7 +44,6 @@ class StackItem:public Item{
 public:
 	StackItem(int typecode,Code* code):Item(typecode,code){}
 	virtual Item* load();
-    virtual void  store();
 	virtual void  duplicate();
 	virtual void  drop();
 	virtual void stash(int toscode);

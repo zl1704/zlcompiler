@@ -137,6 +137,8 @@ Type* ConstFold::fold2(int opcode, ConstType* left, ConstType* right) {
 			return ConstType::create(TypeTags::DOUBLE,toString<jdouble>(strToNum<jdouble>(left->str)/strToNum<jdouble>(right->str)));
 //		case ByteCodes::dmod:
 //			return ConstType::create(TypeTags::DOUBLE,toString<jdouble>(strToNum<jdouble>(left->str)%strToNum<jint>(right->str)));
+		case ByteCodes::string_add:
+			return ConstType::create(TypeTags::STRING,toString(toString(left->str)+toString(right->str)));
 		default:
 			return NULL;
 

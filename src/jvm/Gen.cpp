@@ -69,11 +69,37 @@ void Gen::genArgs(vector<Expression*> trees, vector<Type*> ts){
 	for(int i = 0;i<trees.size();i++)
 			genExpr(trees[i],ts[i])->load();
 }
-
+/**
+ * 生成条件表达项，返回值为true,false
+ */
 CondItem* Gen::genCond(Tree* tree){
 
+	Tree* innerTree = Check::skipParens(tree);
+	if(tree->getTag() == Tree::CONDEXPR){
+		// (cond)?(1):(2)
+		Conditional* ctree = (Conditional*) tree;
+		CondItem* cond = genCond(ctree->cond);
+		//确定真值情况
+		if(cond->isTrue()){
+			code->resolve(cond->trueJumps);
+			return genCond(ctree->truepart);
+		}
+		if(cond->isFalse()){
+			code->resolve(cond->falseJumps);
+			return genCond(ctree->falsepart);
+		}
+		//按if-else翻译
+		//生成false跳转
+		Chain* falseJumps = cond->jumpFalse();
+		//回填trueJumps
+		code->resolve(cond->trueJumps);
+		CondItem* first = genCond(ctree->truepart);
 
-	return NULL;
+
+	}else{
+		return genExpr(tree,syms->booleanType)->mkCond();
+	}
+
 }
 /**
  * 为表达式生成代码，判断常量的情况
@@ -101,28 +127,54 @@ Item* Gen::genExpr(Tree* tree ,Type* pt){
 void Gen::genLoop(Statement* loop, Statement* body, Expression* cond,
 		vector<ExpressionStatement*> step, bool testFirst) {
 
-	Env<GenContext* > loopEnv = env->dup(loop,new GenContext());
+	Env<GenContext* >* loopEnv = env->dup(loop,new GenContext());
 	int startpc = code->entryPoint();
 	if(testFirst){
+		//while ,for
 		CondItem* c;
 		if(cond != NULL){
-			code ->state(cond->pos);
+			code ->statBegin(cond->pos);
 			c = genCond(Check::skipParens(cond));
 		}else{
 			//没有条件直接goto  无test的for
-			c = items->makeCondItem(ByteCodes::goto_);
+			c = items->makeCondItem(ByteCodes::goto_,NULL,NULL);
 		}
-		//false跳转
+		//false跳转,会生成一个跳转指令
 		Chain* loopDone = c->jumpFalse();
 		//true label
-
-
+		code->resolve(c->trueJumps);
+		genStat(body,loopEnv);
+		//处理continue
+		code->resolve(loopEnv->info->cont);
+		//step ,for循环会有
+		genStats(step,loopEnv);
+		//生成跳转指令，跳转到循环start处
+		code->resolve(code->branch(ByteCodes::goto_),startpc);
+		//回填false链，跳出循环
+		code->resolve(loopDone);
 	}else{
+		//do-while
+		//body
+		genStat(body,loopEnv);
+		//continue
+		code->resolve(loopEnv->info->cont);
+		//step ,for循环会有,这里可以不用写
+		genStats(step, loopEnv);
+		CondItem* c;
+		if (cond != NULL) {
+			code->statBegin(cond->pos);
+			c = genCond(Check::skipParens(cond));
+		} else {
+			//没有条件直接goto  无test的for
+			c = items->makeCondItem(ByteCodes::goto_,NULL,NULL);
+		}
 
-
-
+		//回填
+		code->resolve(c->jumpTrue(),startpc);
+		code->resolve(c->falseJumps);
 	}
-
+	//处理循环中的break,exit保存在env中
+	code->resolve(loopEnv->info->exit);
 }
 
 
@@ -138,8 +190,11 @@ void Gen::genMethod(MethodDecl* md,Env<GenContext*>* env){
 	if(code->isAlive()){
 		code->statBegin(md->body->endPos);
 		//生成return指令
+		if(env->enclMethod==NULL||((MethodType*)(env->enclMethod->sym->type))->restype->tag==TypeTags::VOID){
+			code->emitop0(ByteCodes::return_);
+		}
 	}
-
+	code->endScopes(0);
 
 }
 
@@ -339,10 +394,18 @@ void Gen::visitBlock(Block* tree) {
 
 }
 void Gen::visitDoLoop(DoWhileLoop* tree) {
+	vector<ExpressionStatement*> step;
+	genLoop(tree,tree->body,tree->cond,step,false);
 }
 void Gen::visitWhileLoop(WhileLoop* tree) {
+	vector<ExpressionStatement*> step;
+	genLoop(tree,tree->body,tree->cond,step,true);
 }
 void Gen::visitForLoop(ForLoop* tree) {
+	int limit = code->nextreg;
+	genStats(tree->init,env);
+	genLoop(tree,tree->body,tree->cond,tree->step,true);
+	code->endScopes(limit);
 }
 
 void Gen::visitSwitch(Switch* tree) {
@@ -357,8 +420,10 @@ void Gen::visitIf(If* tree) {
 void Gen::visitExec(ExpressionStatement* tree) {
 }
 void Gen::visitBreak(Break* tree) {
+	env->info->addExit(code->branch(ByteCodes::goto_));
 }
 void Gen::visitContinue(Continue* tree) {
+	env->info->addCont(code->branch(ByteCodes::goto_));
 }
 void Gen::visitReturn(Return* tree) {
 }
@@ -376,7 +441,27 @@ void Gen::visitAssignop(AssignOp* tree) {
 }
 void Gen::visitUnary(Unary* tree) {
 }
+
 void Gen::visitBinary(Binary* tree) {
+	OperatorSymbol* opsym = ((OperatorSymbol*)tree->opsym);
+	/**
+	 * string add情况
+	 * 常量折叠已经在attr阶段处理
+	 * 非字面字符串相加暂时不处理，后续版本更新
+	 */
+	if(opsym->opcode == ByteCodes::string_add){
+
+
+	}else if(tree->type->tag == Tree::AND){
+		//&& 条件
+	}else if(tree->type->tag == Tree::OR){
+
+
+	}else{
+
+	}
+
+
 }
 void Gen::visitTypeCast(TypeCast* tree) {
 }

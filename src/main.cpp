@@ -23,6 +23,7 @@
 	complier->compile(fileName);
 //	testmap();
 //	testBits();
+
 	return 0;
 }
 
