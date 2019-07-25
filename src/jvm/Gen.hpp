@@ -59,6 +59,8 @@ public:
 	Item* genExpr(Tree* tree ,Type* pt);
 	void genLoop(Statement* loop,Statement* body,Expression* cond,vector<ExpressionStatement*> step,bool testFirst);
 
+	Item* completeBinop(Tree* lhs,Tree* rhs,OperatorSymbol* opsym);
+
 	/**
 	 * other method
 	 */

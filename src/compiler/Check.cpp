@@ -284,3 +284,13 @@ string Check::treeName(Tree* tree){
 	            return "";
 	}
 }
+
+bool Check::isNull(Tree* tree){
+	if(tree->getTag()!=Tree::LITERAL)
+		return false;
+	if(((Literal*)tree)->typetag==TypeTags::BOT)
+		return true;
+
+
+}
+

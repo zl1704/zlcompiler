@@ -162,7 +162,7 @@ int Code::truncate(int tc) {
 	}
 }
 //取反操作
-int Code::negate(int opcode){
+int Code::negate(int opcode) {
 
 	if (opcode == ByteCodes::if_acmp_null)
 		return ByteCodes::if_acmp_nonnull;
@@ -203,7 +203,7 @@ int Code::curPc() {
 	//fixedPc = true;
 	return cp;
 }
-int Code::entryPoint(){
+int Code::entryPoint() {
 
 	int pc = curPc();
 	alive = true;
@@ -221,57 +221,58 @@ void Code::resolvePending() {
 void Code::resolve(Chain* c, int target) {
 	bool changed = false;
 	State* newState = state;
-	for(;c!=NULL;c = c->next){
+	for (; c != NULL; c = c->next) {
 
-		if(target>cp)
+		if (target > cp)
 			target = cp;
-		else if(get1(target)==ByteCodes::goto_){
+		else if (get1(target) == ByteCodes::goto_) {
 			//target是跳转指令，无需跳到这里
-			target = target + get2(target+1);
+			target = target + get2(target + 1);
 		}
 		//target为goto(chain)下条指令无需跳转，且跳转到target
-		if(get1(c->pc) == ByteCodes::goto_ && c->pc+3 == target && target == cp && !fixedPc){
+		if (get1(c->pc) == ByteCodes::goto_ && c->pc + 3 == target
+				&& target == cp && !fixedPc) {
 			//删除当前指令
-			cp = cp-3;
-			target = target -3;
-			if(c->next == NULL){
+			cp = cp - 3;
+			target = target - 3;
+			if (c->next == NULL) {
 				alive = true;
 				break;
 			}
-		}else{
-			put2(c->pc+1,target-c->pc);
+		} else {
+			//goto为相对当前指令pc的offset,实际pc=curPc+offset
+			put2(c->pc + 1, target - c->pc);
 
 		}
 		fixedPc = true;
-		if(target == cp){
+		if (target == cp) {
 			changed = true;
 			//...
-			if(alive){
+			if (alive) {
 
-			}else{
+			} else {
 
 			}
 
 		}
 
-
 	}
 
 }
-void Code::resolve(Chain* c){
-	Chain::merge(c,pendingJumps);
+void Code::resolve(Chain* c) {
+	Chain::merge(c, pendingJumps);
 }
 
-Chain* Code::branch(int opcode){
+Chain* Code::branch(int opcode) {
 
 	Chain* result = NULL;
-	if(opcode == ByteCodes::goto_){
+	if (opcode == ByteCodes::goto_) {
 		result = pendingJumps;
 		pendingJumps = NULL;
 	}
-	if(opcode!= ByteCodes::dontgoto && isAlive()){
-		result = new Chain(emitJump(opcode),result,state->dup());
-		if(opcode==ByteCodes::goto_)
+	if (opcode != ByteCodes::dontgoto && isAlive()) {
+		result = new Chain(emitJump(opcode), result, state->dup());
+		if (opcode == ByteCodes::goto_)
 			alive = false;
 
 	}
@@ -403,8 +404,8 @@ void Code::emitInvokevirtual(int meth, Type mtype) {
 }
 int Code::emitJump(int op) {
 	//等待回填
-	emitop2(op,0);
-	return cp-3;
+	emitop2(op, 0);
+	return cp - 3;
 }
 /**
  * 输出一个无操作数的操作码,并管理栈中状态(TOS)
@@ -414,7 +415,7 @@ void Code::emitop0(int op) {
 	if (!alive)
 		return;
 	//TOS，记录栈顶类型
-	Type* a,*b,*c,*d;
+	Type* a, *b, *c, *d;
 	switch (op) {
 	case ByteCodes::aaload: {
 		//对象数组
@@ -780,23 +781,22 @@ void Code::emitop0(int op) {
 		state->pop(4);
 		state->push(syms->intType);
 		break;
-	case ByteCodes::wide://must be handled by the caller
+	case ByteCodes::wide:		//must be handled by the caller
 		return;
 	case ByteCodes::monitorenter:
 	case ByteCodes::monitorexit:
 		state->pop(1);
 		break;
 	default:
-		cout << "emitop0 error"<<endl;
+		cout << "emitop0 error" << endl;
 	}
 
 }
 //! 不知道是否可行，回头再测试
-Type* Code::typeForPool(void* cd){
+Type* Code::typeForPool(void* cd) {
 
-
-	if(static_cast<ConstType* >(cd)){
-		ConstType* ct = static_cast<ConstType* >(cd);
+	if (static_cast<ConstType*>(cd)) {
+		ConstType* ct = static_cast<ConstType*>(cd);
 		if (ct->tag == TypeTags::INT)
 			return syms->intType;
 		if (ct->tag == TypeTags::FLOAT)
@@ -806,7 +806,7 @@ Type* Code::typeForPool(void* cd){
 		if (ct->tag == TypeTags::DOUBLE)
 			return syms->doubleType;
 
-	}else if(static_cast<ClassSymbol* >(cd)||static_cast<ArrayType* >(cd)){
+	} else if (static_cast<ClassSymbol*>(cd) || static_cast<ArrayType*>(cd)) {
 		return syms->classType;
 	}
 	cout << "error:  typeForPool ";
@@ -819,9 +819,10 @@ Type* Code::typeForPool(void* cd){
  */
 void Code::emitop1(int op, int od) {
 	emitop(op);
-	if(!alive) return;
+	if (!alive)
+		return;
 	emit1(od);
-	switch(op){
+	switch (op) {
 	case ByteCodes::bipush:
 		state->push(syms->intType);
 		break;
@@ -829,7 +830,7 @@ void Code::emitop1(int op, int od) {
 		state->push(typeForPool(pool->pool[od]));
 		break;
 	default:
-		cout << ByteCodes::getCodeStr(op)<<"不应该出现在 emitop1"<<endl;
+		cout << ByteCodes::getCodeStr(op) << "不应该出现在 emitop1" << endl;
 
 	}
 }
@@ -848,9 +849,9 @@ void Code::emitop1w(int op, int od) {
 		emitop(op);
 		emit1(od);
 	}
-	if(!alive)
+	if (!alive)
 		return;
-	switch(op){
+	switch (op) {
 	case ByteCodes::iload:
 		state->push(syms->intType);
 		break;
@@ -879,7 +880,7 @@ void Code::emitop1w(int op, int od) {
 		markDead();
 		break;
 	default:
-		cout << ByteCodes::getCodeStr(op) << "  不应该出现在emitop1w" <<endl;
+		cout << ByteCodes::getCodeStr(op) << "  不应该出现在emitop1w" << endl;
 	}
 
 }
@@ -891,23 +892,23 @@ void Code::emitop1w(int op, int od) {
  */
 void Code::emitop1w(int op, int od1, int od2) {
 
-	if(od1>0xFF||od2<-128||od2>127){
+	if (od1 > 0xFF || od2 < -128 || od2 > 127) {
 		emitop(ByteCodes::wide);
 		emitop(op);
 		emit2(od1);
 		emit2(od2);
-	}else{
+	} else {
 		emitop(op);
 		emit1(od1);
 		emit1(od2);
 	}
-	if(!alive)
+	if (!alive)
 		return;
-	switch(op){
+	switch (op) {
 	case ByteCodes::iinc:
 		break;
 	default:
-		cout << ByteCodes::getCodeStr(op) << "  不应该出现在emitop1w(双操作数)" <<endl;
+		cout << ByteCodes::getCodeStr(op) << "  不应该出现在emitop1w(双操作数)" << endl;
 	}
 }
 
@@ -1000,8 +1001,8 @@ void Code::emitop4(int op, int od) {
 }
 
 void Code::emit1(int op) {
-	if(util::debug){
-		cout << "Gen :\t " << ByteCodes::getCodeStr(op)<< endl;
+	if (util::debug) {
+		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << endl;
 	}
 	if (!alive)
 		return;
@@ -1066,7 +1067,7 @@ void Code::align(int incr) {
 /**
  *  Chain
  */
-Chain::Chain(int pc, Chain* next,State* state) {
+Chain::Chain(int pc, Chain* next, State* state) {
 	this->pc = pc;
 	this->next = next;
 	this->state = state;
@@ -1079,8 +1080,8 @@ Chain* Chain::merge(Chain* c1, Chain* c2) {
 		return c1;
 	Chain* new_chain = NULL;
 	if (c1->pc < c2->pc)
-		new_chain = new Chain(c2->pc, merge(c1, c2->next),c2->state);
-	new_chain = new Chain(c1->pc, merge(c1->next, c2),c1->state);
+		new_chain = new Chain(c2->pc, merge(c1, c2->next), c2->state);
+	new_chain = new Chain(c1->pc, merge(c1->next, c2), c1->state);
 	delete c1;
 	delete c2;
 	return new_chain;

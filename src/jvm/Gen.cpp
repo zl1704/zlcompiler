@@ -90,12 +90,22 @@ CondItem* Gen::genCond(Tree* tree){
 		}
 		//按if-else翻译
 		//生成false跳转
-		Chain* falseJumps = cond->jumpFalse();
-		//回填trueJumps
+		Chain* secondJumps = cond->jumpFalse();
+		//合并trueJumps
 		code->resolve(cond->trueJumps);
 		CondItem* first = genCond(ctree->truepart);
-
-
+		//(1)中 false跳转
+		Chain* falseJumps = first->jumpFalse();
+		code->resolve(first->trueJumps);
+		//true跳转，跳到(2)之后
+		Chain* trueJumps = code->branch(ByteCodes::goto_);
+		//false跳转
+		code->resolve(secondJumps);
+		//(2)语句
+		CondItem* second = genCond(ctree->falsepart);
+		//合并(1) (2)中true ，false出口
+		CondItem* result = items->makeCondItem(second->opcode,Chain::merge(trueJumps,second->trueJumps),Chain::merge(falseJumps,second->falseJumps));
+		return result;
 	}else{
 		return genExpr(tree,syms->booleanType)->mkCond();
 	}
@@ -414,6 +424,7 @@ void Gen::visitCase(Case* tree) {
 }
 
 void Gen::visitConditional(Conditional* tree) {
+
 }
 void Gen::visitIf(If* tree) {
 }
@@ -454,15 +465,69 @@ void Gen::visitBinary(Binary* tree) {
 
 	}else if(tree->type->tag == Tree::AND){
 		//&& 条件
-	}else if(tree->type->tag == Tree::OR){
+		CondItem* lcond = genCond(tree->lhs);
+		if(!lcond->isFalse()){
+			Chain* falseJumps = lcond->jumpFalse();
+			code->resolve(lcond->trueJumps);
+			CondItem* rcond = genCond(tree->rhs);
 
+			result = items->makeCondItem(rcond->opcode,rcond->trueJumps,Chain::merge(falseJumps,rcond->falseJumps));
+
+
+		}else{
+			//常量false情况,短路机制
+			result = lcond;
+		}
+	}else if(tree->type->tag == Tree::OR){
+		//思路同AND
+		CondItem* lcond = genCond(tree->lhs);
+		if(!lcond->isTrue()){
+			Chain* trueJumps = lcond->jumpTrue();
+			code->resolve(lcond->falseJumps);
+			CondItem* rcond = genCond(tree->rhs);
+
+			result = items->makeCondItem(rcond->opcode,Chain::merge(trueJumps,rcond->trueJumps),rcond->falseJumps);
+
+		}else{
+			result = lcond;
+		}
 
 	}else{
-
+		Item* item = genExpr(tree->lhs,((MethodType*)opsym->type)->argtypes.at(0));
+		item->load();
+		result = completeBinop(tree->lhs,tree->rhs,opsym);
 	}
 
 
 }
+Item*  Gen::completeBinop(Tree* lhs,Tree* rhs,OperatorSymbol* opsym){
+	MethodType* mt = (MethodType*)opsym;
+	int opcode = opsym->opcode;
+	//int与0比较 直接转换为比较跳转指令(153~158)
+	if(ByteCodes::if_icmpeq<=opcode && opcode<=ByteCodes::if_icmpeq&&
+			rhs->type->isConst()){
+		ConstType* ctype = ((ConstType*)rhs->type);
+		if(util::strToNum<jint>(ctype->str)==0){
+			opcode = opcode +(ByteCodes::ifeq-ByteCodes::if_icmpeq);
+
+		}
+
+	}else if(ByteCodes::if_acmpeq<=opcode && opcode<=ByteCodes::if_acmpne&&Check::isNull(rhs)){
+		//对象判断null
+		opcode = opcode +(ByteCodes::if_acmp_null-ByteCodes::if_acmpeq);
+
+	}else{
+		//
+
+
+
+	}
+
+
+
+}
+
+
 void Gen::visitTypeCast(TypeCast* tree) {
 }
 void Gen::visitTypeTest(InstanceOf* tree) {

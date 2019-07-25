@@ -23,6 +23,7 @@ public:
 	static Tree* skipParens(Tree* tree);
 	static Expression* skipParens(Expression* tree);
 	static string treeName(Tree* tree);
+	static bool isNull(Tree* tree);
 	//类型兼容
 	bool isAssignable(Type* found, Type* req);
 	//检查符号重复
