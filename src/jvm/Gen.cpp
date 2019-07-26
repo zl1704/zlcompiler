@@ -501,10 +501,10 @@ void Gen::visitBinary(Binary* tree) {
 
 }
 Item*  Gen::completeBinop(Tree* lhs,Tree* rhs,OperatorSymbol* opsym){
-	MethodType* mt = (MethodType*)opsym;
+	MethodType* mt = (MethodType*)opsym->type;
 	int opcode = opsym->opcode;
 	//int与0比较 直接转换为比较跳转指令(153~158)
-	if(ByteCodes::if_icmpeq<=opcode && opcode<=ByteCodes::if_icmpeq&&
+	if(ByteCodes::if_icmpeq<=opcode && opcode<=ByteCodes::if_icmple&&
 			rhs->type->isConst()){
 		ConstType* ctype = ((ConstType*)rhs->type);
 		if(util::strToNum<jint>(ctype->str)==0){
@@ -518,7 +518,31 @@ Item*  Gen::completeBinop(Tree* lhs,Tree* rhs,OperatorSymbol* opsym){
 
 	}else{
 		//
+		Type* rtype = mt->argtypes[1];
+		//把移位数由long换成int
+		if(opcode>=ByteCodes::ishll && opcode <=ByteCodes::lushrl){
+			opcode = opcode +(ByteCodes::ishl-ByteCodes::ishll);
+			rtype = syms->intType;
+		}
+		//生成第二操作数
+		genExpr(rhs,rtype)->load();
+		//在symtab中，有的操作注册了两种指令，高8位（opcode1）|低8位（opcode2），现在取第一个
+		if(opcode>=(1<<ByteCodes::preShift)){
 
+			//用第一个指令，高8位
+			code->emitop0(opcode >>ByteCodes::preShift);
+			opcode = opcode & 0xFF;
+		}
+		//如果是比较跳转指令，暂时不输出指令，等待后续回填,if-else 会调用对应jumptrue或jumpfalse
+		if ((ByteCodes::ifeq <= opcode && opcode <= ByteCodes::if_acmpne)
+				|| opcode == ByteCodes::if_acmp_null
+				|| opcode == ByteCodes::if_acmp_nonnull) {
+			return items->makeCondItem(opcode,NULL,NULL);
+		}else{
+			code->emitop0(opcode);
+			return items->makeStackItem(mt->restype);
+
+		}
 
 
 	}

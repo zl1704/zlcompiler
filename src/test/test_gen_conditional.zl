@@ -1,0 +1,14 @@
+class A{
+
+	public void fun(){
+	
+		int c = (a>b?false:true) ? fun(1,2):2;
+	
+	}
+	
+	public int fun(int a,int b){
+		return a+b;
+	
+	}
+
+}

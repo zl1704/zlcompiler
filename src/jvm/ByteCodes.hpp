@@ -228,7 +228,8 @@ public :
 
 	    /** Virtual opcodes; used for shifts with long shiftcount
 	     */
-	    static const int ishll           = 270,  // int shift left with long count
+	    static const int
+			ishll           = 270,  // int shift left with long count
 	        lshll           = 271,  // long shift left with long count
 	        ishrl           = 272,  // int shift right with long count
 	        lshrl           = 273,  // long shift right with long count
