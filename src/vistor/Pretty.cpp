@@ -342,7 +342,6 @@ void Pretty::visitConditional(Conditional* tree) {
 		print(" : ");
 		printExpr(tree->falsepart, TreeInfo::condPrec);
 		close(prec, TreeInfo::condPrec);
-		align();
 	} catch (exception& e) {
 		cout << "visit Conditional exception: " << e.what() << endl;
 	}

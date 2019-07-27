@@ -18,6 +18,10 @@ public:
 	Source* source;
 
 	static const int ERROR = 1;
+	static const int ERROR_Lexer = 1;
+	static const int ERROR_Parser =ERROR_Lexer + 1;
+	static const int ERROR_Check = ERROR_Parser + 1;
+	static const int ERROR_Attr =  ERROR_Check + 1;
 	static const int EXPECTED_1= 1;
 	static const int EXPECTED_2= 2;
 	static const int EXPECTED_3= 3;
@@ -28,6 +32,7 @@ public:
 	void report(int pos,int kind, string msg);
 	void report(int pos,int kind, string msg,string expected);
 	void report(int pos,int kind, string msg,string expected,string find);
+	string getErrorKind(int kind);
 	virtual ~Log();
 private :
 	int errorNums ;

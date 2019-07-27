@@ -38,9 +38,7 @@ void Log::report(int pos, int kind, string msg) {
 	int col = source->getCol(pos);
 	string lineStr = source->getLineStr(line);
 	cout << source->getFileName() << ":" << line << ": ";
-	if (kind == ERROR) {
-		cout << "错误: ";
-	}
+	cout << getErrorKind(kind);
 	cout << msg << endl;
 	cout << lineStr << endl;
 	for (int i = 0; i < col; i++) {
@@ -62,3 +60,15 @@ void Log::report(int pos, int kind, string msg, string expected, string find) {
 		cout << "  找到:\t" + find << endl;
 
 }
+
+string Log::getErrorKind(int kind){
+	switch(kind){
+	case ERROR_Lexer: return "错误(Lexer): ";
+	case ERROR_Parser:return "错误(Parser): ";
+	case ERROR_Check: return "错误(Check): ";
+	case ERROR_Attr:  return "错误(Attr): ";
+	default :
+		return "未知错误: ";
+	}
+}
+

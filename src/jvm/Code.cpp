@@ -150,7 +150,6 @@ Code::Code(MethodSymbol* sym, Pool* pool) {
 	items = NULL;
 	source = Source::instance();
 }
-
 int Code::truncate(int tc) {
 	switch (tc) {
 	case ByteCodes::BYTEcode:

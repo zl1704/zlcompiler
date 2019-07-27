@@ -36,7 +36,7 @@ Scope* Scope::dup(Symbol* newOwner,bool shared) {
 	Entry** new_table = new Entry*[INITIAL_SIZE];
 	memset(new_table, 0, INITIAL_SIZE * sizeof(Entry*));
 	if(shared)
-		memcpy(table, table, this->size);
+		memcpy(new_table, table, this->size);
 	return new Scope(this, newOwner, new_table, 0, INITIAL_SIZE);
 }
 //共享复制

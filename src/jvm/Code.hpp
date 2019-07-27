@@ -40,7 +40,6 @@ public:
 	}
 
 
-
 	//用于debug变量活跃范围
 	int start_pc;
 	int length;
@@ -166,7 +165,7 @@ public:
 	void endScopes(int adr);
 
 	inline bool isAlive(){
-		return alive&& pendingJumps!=NULL;
+		return alive || pendingJumps!=NULL;
 	}
 	inline void markAlive(){
 		alive = true;

@@ -1,6 +1,6 @@
 class A{
 
-	public void fun(){
+	public void fun(double a, double b){
 	
 		int c = (a>b?false:true) ? fun(1,2):2;
 	

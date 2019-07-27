@@ -35,7 +35,8 @@ Env<AttrContext*>* Attr::attribute(Env<AttrContext*>* env) {
 }
 void Attr::attribute(ClassSymbol* c) {
 	//需要支持继承 在这里提前attr 父类
-
+	if(util::debug)
+			cout<<endl << "==========Attr start:" <<endl;
 	Env<AttrContext*> * env = enter->typeEnvs.find(c)->second;
 
 	attriClassBody(env, c);
@@ -119,7 +120,7 @@ Type* Attr::check(Tree* tree, Type* owntype, Type* pt, int ownkind, int pkind,
 		if ((ownkind & ~pkind) == 0)
 			owntype = chk->checkType(tree->pos,owntype,pt,errKey);
 		else{
-			log->report(tree->pos,Log::ERROR,errKey);
+			log->report(tree->pos,Log::ERROR_Attr,errKey);
 
 		}
 
@@ -197,7 +198,7 @@ Symbol* Attr::findMethod(int pos, Scope* s, string name,
 			err += ",";
 	}
 	err += ")";
-	log->report(pos, Log::ERROR, err);
+	log->report(pos, Log::ERROR_Attr, err);
 
 	return syms->errSymbol;
 }
@@ -208,7 +209,7 @@ Symbol* Attr::findField(int pos, Scope* s, string name,Type* t) {
 				return e->sym;
 			}
 		}
-		log->report(pos, Log::ERROR,Type::typeName(t) +"类中没有找到成员属性 " + name);
+		log->report(pos, Log::ERROR_Attr,Type::typeName(t) +"类中没有找到成员属性 " + name);
 		return syms->errSymbol;
 	}
 }
@@ -233,7 +234,7 @@ Symbol* Attr::findIdent(int pos, Env<AttrContext*>* env, string name,
 		}
 		s = s->next;
 	}
-	log->report(pos, Log::ERROR, "没有找到符号  " + name);
+	log->report(pos, Log::ERROR_Attr, "没有找到符号  " + name);
 	return syms->errSymbol;
 }
 Symbol* Attr::findType(Env<AttrContext*>* env, string name) {
@@ -312,7 +313,7 @@ Symbol* Attr::resolveBinaryOperator(int pos, Env<AttrContext*>* env, int optag,
 		}
 	string err = "没有找到匹配的运算    " + Type::typeName(left) + "  "
 			+ TreeInfo::operatorName(optag) + " " + Type::typeName(right);
-	log->report(pos, Log::ERROR, err);
+	log->report(pos, Log::ERROR_Attr, err);
 	return syms->errSymbol;
 
 }
@@ -353,7 +354,7 @@ Symbol* Attr::resolveUnaryOperator(int pos, int optag, Env<AttrContext*>* env,
 	}
 	string err = "没有找到匹配的运算    " + Type::typeName(argtype) + "  "
 			+ TreeInfo::operatorName(optag) + "   ";
-	log->report(pos, Log::ERROR, err);
+	log->report(pos, Log::ERROR_Attr, err);
 	return syms->errSymbol;
 
 }
@@ -372,7 +373,7 @@ Symbol* Attr::selectSym(FieldAccess* tree, Symbol* sitesym, Type* site,
 					&& (env->enclClass->sym != site->tsym)) {
 				long long flags = ((MethodSymbol*) s)->flags_field;
 				if ((flags & Flags::PUBLIC) == 0)
-					log->report(tree->pos, Log::ERROR, "无法访问非public方法");
+					log->report(tree->pos, Log::ERROR_Attr, "无法访问非public方法");
 
 			}
 		} else if (name == Name::_this) {
@@ -384,7 +385,7 @@ Symbol* Attr::selectSym(FieldAccess* tree, Symbol* sitesym, Type* site,
 //				long long flags = ((MethodSymbol*) s)->flags_field;
 //				//这里肯定是自身调用，无需判断 public
 ////				if ((flags & Flags::PUBLIC) == 0)
-////					log->report(tree->pos, Log::ERROR, "无法访问非public方法");
+////					log->report(tree->pos, Log::ERROR_Attr, "无法访问非public方法");
 //
 //			}
 		} else {
@@ -393,14 +394,14 @@ Symbol* Attr::selectSym(FieldAccess* tree, Symbol* sitesym, Type* site,
 			if (s->kind == Kinds::VAR && (env->enclClass->sym != site->tsym)) {
 				long long flags = ((VarSymbol*) s)->flags_field;
 				if ((flags & Flags::PUBLIC) == 0)
-					log->report(tree->pos, Log::ERROR, "无法访问非public属性");
+					log->report(tree->pos, Log::ERROR_Attr, "无法访问非public属性");
 			}
 		}
 
 
 		return s;
 	} else {
-		log->report(tree->pos, Log::ERROR, "类型不是class 对象,无法access成员");
+		log->report(tree->pos, Log::ERROR_Attr, "类型不是class 对象,无法access成员");
 		return syms->errSymbol;
 	}
 
@@ -506,7 +507,7 @@ void Attr::visitSwitch(Switch* tree) {
 	Env<AttrContext*>* switchEnv = env->dup(tree,
 			env->info->dup(env->info->scope->dup()));
 	if (chk->sameType(seltype, syms->stringType)) {
-		log->report(tree->pos, Log::ERROR, "switch 不支持字符串");
+		log->report(tree->pos, Log::ERROR_Attr, "switch 不支持字符串");
 	}
 	bool hasDefault = false;
 	Case* c = NULL;
@@ -518,7 +519,7 @@ void Attr::visitSwitch(Switch* tree) {
 		if (c->pat != NULL) {
 			Type* pattype = attribExpr(c->pat, switchEnv, seltype);
 		} else if (hasDefault) {
-			log->report(tree->pos, Log::ERROR, "重复的default label");
+			log->report(tree->pos, Log::ERROR_Attr, "重复的default label");
 
 		} else {
 			hasDefault = true;
@@ -592,10 +593,10 @@ void Attr::visitReturn(Return* tree) {
 	if (m->type->tag == TypeTags::VOID) {
 		//void  return后没有值
 		if (tree->expr) {
-			log->report(tree->expr->pos, Log::ERROR, "void 方法无返回值");
+			log->report(tree->expr->pos, Log::ERROR_Attr, "void 方法无返回值");
 		}
-	} else if (tree->expr != NULL) {
-		log->report(tree->expr->pos, Log::ERROR, "缺少返回值");
+	} else if (tree->expr == NULL) {
+		log->report(tree->expr->pos, Log::ERROR_Attr, "缺少返回值");
 	} else
 		attribExpr(tree->expr, env, ((MethodType*) m->type)->restype);
 
@@ -614,7 +615,7 @@ void Attr::visitApply(MethodInvocation* tree) {
 		if (env->enclMethod->sym->name != Name::init
 				&& ((void *) env->enclMethod->body->stats.at(0))
 						!= ((void *) tree))
-			log->report(tree->pos, Log::ERROR, "构造方法调用只能出现在构造方法第一行");
+			log->report(tree->pos, Log::ERROR_Attr, "构造方法调用只能出现在构造方法第一行");
 		result = tree->type = syms->voidType;
 	} else {
 		//普通方法
@@ -663,7 +664,7 @@ void Attr::visitNewArray(NewArray* tree) {
 		if (pt->tag == TypeTags::ARRAY) {
 			elemtype = ((ArrayType*)pt)->elemtype;
 		}else{
-			log->report(tree->pos,Log::ERROR,"非法数组初始化");
+			log->report(tree->pos,Log::ERROR_Attr,"非法数组初始化");
 		}
 
 
@@ -781,7 +782,7 @@ void Attr::visitIndexed(ArrayAccess* tree) {
 	if(owntype->tag == TypeTags::ARRAY)
 		t = ((ArrayType*) owntype)->elemtype;
 	else
-		log->report(tree->indexed->pos,Log::ERROR,"必须为数组,但找到 "+Type::typeName(owntype));
+		log->report(tree->indexed->pos,Log::ERROR_Attr,"必须为数组,但找到 "+Type::typeName(owntype));
 
 	  result = check(tree, owntype, pt, Kinds::VAR, pkind,"类型不兼容");
 }
@@ -807,7 +808,7 @@ void Attr::visitSelect(FieldAccess* tree) {
 		if(dynamic_cast<Ident*>(tree->selected)){
 			string name =((Ident*) tree->selected)->name;
 			if(name == site->tsym->name)
-				log->report(tree->pos, Log::ERROR, "只有对象才能访问非static成员");
+				log->report(tree->pos, Log::ERROR_Attr, "只有对象才能访问非static成员");
 		}
 	}
 
@@ -836,7 +837,7 @@ void Attr::visitIdent(Ident* tree) {
 		Symbol* sym =  env->info->scope->owner;
 		if(sym && (((MethodSymbol*)sym)->flags_field & Flags::STATIC) != 0 &&(tree->sym->flags_field & Flags::STATIC) ==0){
 			if((tree->sym->kind&Kinds::MTH )!=0||(tree->sym->kind&Kinds::VAR) !=0)
-				log->report(tree->pos,Log::ERROR,"static区不能访问非static成员");
+				log->report(tree->pos,Log::ERROR_Attr,"static区不能访问非static成员");
 
 		}
 	}

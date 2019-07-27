@@ -43,7 +43,8 @@ void Enter::print(Env<AttrContext*>* env) {
 
 //入口
 void Enter::main(vector<CompilationUnit*> trees) {
-
+	if(util::debug)
+		cout<<endl << "==========Enter start:" <<endl;
 	complete(trees, NULL);
 }
 
@@ -73,7 +74,7 @@ Env<AttrContext*>* Enter::topLevelEnv(CompilationUnit* tree) {
 Env<AttrContext*>* Enter::classEnv(ClassDecl* tree, Env<AttrContext*>* env) {
 
 	Env<AttrContext*>* localEnv = env->dup(tree,
-			env->info->dup(env->info->scope->dup(tree->sym)));
+			env->info->dup(env->info->scope->dup(tree->sym,false)));
 	localEnv->enclClass = tree;
 	localEnv->outer = env;
 	localEnv->info->isSelfCall = false;
@@ -85,7 +86,7 @@ Env<AttrContext*>* Enter::classEnv(ClassDecl* tree, Env<AttrContext*>* env) {
  */
 Env<AttrContext*>* Enter::methodEnv(MethodDecl* tree, Env<AttrContext*>* env) {
 	Env<AttrContext*>* localEnv = env->dup(tree,
-			env->info->dup(env->info->scope->dup(tree->sym)));
+			env->info->dup(env->info->scope->dup(tree->sym,false)));
 	localEnv->enclMethod = tree;
 	localEnv->info->scope->owner = tree->sym;
 	if ((tree->mods->flags & Flags::STATIC) != 0)
@@ -101,7 +102,7 @@ Env<AttrContext*>* Enter::initEnv(VariableDecl* tree, Env<AttrContext*>* env) {
 	Env<AttrContext*>* localEnv = env->dupto(
 			new Env<AttrContext*>(tree, env->info->dup()));
 	if (tree->sym->owner->kind == Kinds::TYP) {
-		localEnv->info->scope = env->info->scope->dup();
+		localEnv->info->scope = env->info->scope->dup(false);
 		localEnv->info->scope->owner = tree->sym;
 	}
 	return localEnv;
@@ -224,7 +225,7 @@ void Enter::visitClassDef(ClassDecl* tree) {
 		localEnv->tree = tree;
 		localEnv->enclClass = tree;
 		localEnv->toplevel = env->toplevel;
-		c->members_field = enclScope->dup(c);
+		c->members_field = enclScope->dup(c,false);
 		c->flags_field = tree->mods->flags;
 		tree->sym = c;
 		/**
@@ -260,7 +261,7 @@ void Enter::visitClassDef(ClassDecl* tree) {
 void Enter::visitMethodDef(MethodDecl* tree) {
 	Scope* enclScope = enterScope(env);
 	if(util::debug){
-		cout << "enter:visitMethod:";
+		cout << "method :" + tree->name << " enclscope: ";
 		enclScope->print();
 		cout << endl;
 	}
@@ -268,7 +269,11 @@ void Enter::visitMethodDef(MethodDecl* tree) {
 			enclScope->owner);
 	tree->sym = m;
 	Env<AttrContext*>* localEnv = methodEnv(tree, env);
-
+	if(util::debug){
+			cout << "method :" + tree->name << " localEnv: ";
+			localEnv->info->scope->print();
+			cout << endl;
+	}
 	//方法的 类型 ，包括 返回类型，参数类型。。(泛型...)
 	m->type = signature(tree->restype, tree->params, localEnv);
 

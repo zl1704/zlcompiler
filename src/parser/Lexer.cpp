@@ -421,7 +421,7 @@ bool Lexer::isSpecial(char ch) {
 }
 
 void Lexer::lexError(string msg){
-	log->report(pos,Log::ERROR,msg);
+	log->report(pos,Log::ERROR_Lexer,msg);
 }
 
 

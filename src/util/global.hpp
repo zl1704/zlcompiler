@@ -20,7 +20,7 @@
 
 using namespace std;
 namespace util {
-static bool debug = false;
+static bool debug = true;
 
 
 //ostringstream对象用来进行格式化的输出，常用于将各种类型转换为string类型

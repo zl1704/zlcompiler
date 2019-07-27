@@ -81,7 +81,7 @@ Type* Check::checkType(int pos, Type* t, Type* req, string errKey) {
 		Type* t2 = req;
 		//其中一个非数组
 		if (t->tag != TypeTags::ARRAY || req->tag != TypeTags::ARRAY) {
-			log->report(pos, Log::ERROR, errKey, Type::typeName(t2),
+			log->report(pos, Log::ERROR_Check, errKey, Type::typeName(t2),
 					Type::typeName(t1));
 			return new ErrorType(t, syms->errSymbol);
 		}
@@ -92,12 +92,12 @@ Type* Check::checkType(int pos, Type* t, Type* req, string errKey) {
 		}
 		//维度不一样
 		if ((t1->tag == TypeTags::ARRAY || t2->tag == TypeTags::ARRAY)) {
-			log->report(pos, Log::ERROR, "数组维度不一致");
+			log->report(pos, Log::ERROR_Check, "数组维度不一致");
 			return new ErrorType(t, syms->errSymbol);
 		}
 		//维度一样 检查类型是否一样
 		else if (!isAssignable(t1, t2)) {
-			log->report(pos, Log::ERROR, errKey, Type::typeName(t2),
+			log->report(pos, Log::ERROR_Check, errKey, Type::typeName(t2),
 					Type::typeName(t1));
 			return new ErrorType(t, syms->errSymbol);
 		}
@@ -105,7 +105,7 @@ Type* Check::checkType(int pos, Type* t, Type* req, string errKey) {
 	}
 	//非数组情况
 	else if (!isAssignable(t, req)) {
-		log->report(pos, Log::ERROR, errKey, Type::typeName(req),
+		log->report(pos, Log::ERROR_Check, errKey, Type::typeName(req),
 				Type::typeName(t));
 	}
 
@@ -194,16 +194,16 @@ bool Check::sameType(Type* t, Type* s) {
  */
 void Check::checkEmptyIf(If* tree) {
 	if (tree->thenpart->getTag() == Tree::SKIP && tree->elsepart == NULL)
-		log->report(tree->pos, Log::ERROR, "空if");
+		log->report(tree->pos, Log::ERROR_Check, "空if");
 }
 
 Type* Check::checkNonVoid(int pos, Type* t) {
 	if(!t){
-		log->report(pos, Log::ERROR, "内部错误 ：checkNonVoid ,type = null");
+		log->report(pos, Log::ERROR_Check, "内部错误 ：checkNonVoid ,type = null");
 		return t;
 	}
 	if (t->tag == TypeTags::VOID)
-		log->report(pos, Log::ERROR, "这里不允许void");
+		log->report(pos, Log::ERROR_Check, "这里不允许void");
 	return t;
 }
 void Check::duplicateError(int pos, Symbol* sym) {
@@ -212,9 +212,9 @@ void Check::duplicateError(int pos, Symbol* sym) {
 //
 //	} else {
 //		//变量
-//		log->report(pos, Log::ERROR, sym->name + "重复定义");
+//		log->report(pos, Log::ERROR_Check, sym->name + "重复定义");
 //	}
-	log->report(pos, Log::ERROR, kindName(sym->kind) + sym->name + "重复定义");
+	log->report(pos, Log::ERROR_Check, kindName(sym->kind) + sym->name + "重复定义");
 }
 
 string Check::kindName(int kind) {

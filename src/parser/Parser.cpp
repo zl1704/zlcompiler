@@ -16,11 +16,13 @@ Parser::Parser(Lexer* L, Log* log) :
 	errorEndPos = -1;
 }
 
-
 /**
  *CompilationUnit =  ClassDeclaration
  */
 CompilationUnit* Parser::parseCompilationUnit() {
+	if (util::debug)
+		cout << endl << "==========Parser start:" << endl;
+
 	int pos = L->getToken()->pos;
 	vector<Tree*> defs;
 	while (L->getToken()->id != Token::EOF_) {
@@ -53,7 +55,7 @@ vector<Tree*> Parser::classBody(string className) {
 	}
 
 	vector<Tree*> defs;
-	while (L->getToken ()->id != Token::RBRACE
+	while (L->getToken()->id != Token::RBRACE
 			&& L->getToken()->id != Token::EOF_) {
 
 		util::appendList(defs, classBodyDeclaration(className));
@@ -197,7 +199,7 @@ vector<Statement*> Parser::blockStatements() {
 		case Token::CONTINUE:
 		case Token::SEMI:
 		case Token::ELSE:
-		//暂不支持
+			//暂不支持
 //	    case Token::FINALLY: case Token::CATCH: case Token::TRY:case Token::THROW:case Token::SYNCHRONIZED:
 			stats.push_back(parseStatement());
 			break;
@@ -290,39 +292,40 @@ Statement* Parser::parseStatement() {
 		accept(Token::LBRACE);
 		vector<Case*> cases = switchBlockStatementGroups();
 		accept(Token::RBRACE);
-		return TreeMaker::makeSwitch(pos,selector,cases);
+		return TreeMaker::makeSwitch(pos, selector, cases);
 	}
 	case Token::RETURN: {
 		L->nextToken();
-		Expression* result = L->getToken()->id == Token::SEMI ? NULL : parseExpression();
+		Expression* result =
+				L->getToken()->id == Token::SEMI ? NULL : parseExpression();
 		accept(Token::SEMI);
-		return TreeMaker::makeReturn(pos,result);
+		return TreeMaker::makeReturn(pos, result);
 	}
 	case Token::BREAK: {
 		L->nextToken();
-		string label = L->getToken()->id == Token::IDENTIFIER ? ident() :"";
+		string label = L->getToken()->id == Token::IDENTIFIER ? ident() : "";
 		accept(Token::SEMI);
-		return TreeMaker::makeBreak(pos,label);
+		return TreeMaker::makeBreak(pos, label);
 	}
 	case Token::CONTINUE: {
 		L->nextToken();
-				string label = L->getToken()->id == Token::IDENTIFIER ? ident() :"";
-				accept(Token::SEMI);
-				return TreeMaker::makeContinue(pos,label);
+		string label = L->getToken()->id == Token::IDENTIFIER ? ident() : "";
+		accept(Token::SEMI);
+		return TreeMaker::makeContinue(pos, label);
 	}
 	case Token::ELSE: {
-		reportSyntaxError(pos,"没有前置 if 的 else ");
+		reportSyntaxError(pos, "没有前置 if 的 else ");
 		L->nextToken();
 		//暂时跳过这个错误
 		return TreeMaker::makeSkip(pos);
 	}
-	case Token::SEMI:{
+	case Token::SEMI: {
 		L->nextToken();
-	    return TreeMaker::makeSkip(pos);
+		return TreeMaker::makeSkip(pos);
 	}
 	default:
 		Expression* expr = parseExpression();
-		ExpressionStatement * stat = TreeMaker::makeExec(pos,expr);
+		ExpressionStatement * stat = TreeMaker::makeExec(pos, expr);
 		accept(Token::SEMI);
 		return stat;
 	}
@@ -395,7 +398,10 @@ vector<Case*> Parser::switchBlockStatementGroups() {
 			return cases;
 		default:
 			L->nextToken();			// 保证进程.
-			reportSyntaxError(pos,Token::tokenStr(Token::CASE)+","+Token::tokenStr(Token::DEFAULT)+","+Token::tokenStr(Token::RBRACE));
+			reportSyntaxError(pos,
+					Token::tokenStr(Token::CASE) + ","
+							+ Token::tokenStr(Token::DEFAULT) + ","
+							+ Token::tokenStr(Token::RBRACE));
 		}
 	}
 }
@@ -474,8 +480,7 @@ template<class T>
 vector<T> Parser::variableDeclarators(Modifiers* mods, Expression* type,
 		vector<T> vdefs) {
 	int pos = L->getToken()->pos;
-	return variableDeclaratorsRest(pos, mods, type, ident(),
-			vdefs);
+	return variableDeclaratorsRest(pos, mods, type, ident(), vdefs);
 	/**
 	 * 原来使用,pos是ident下个token的位置,参数入栈：从右向左
 	 */
@@ -1006,7 +1011,7 @@ Expression* Parser::term3() {
 	case Token::FLOAT:
 	case Token::DOUBLE:
 	case Token::BOOLEAN:
-	case Token::STRING://string类型
+	case Token::STRING:				//string类型
 		t = bracketsSuffix(bracketsOpt(basicType()));
 		break;
 	default:
@@ -1018,7 +1023,7 @@ Expression* Parser::term3() {
 	//fun()[1] fun().fun2()...
 	while (true) {
 		int pos2 = L->getToken()->pos;
-		if (L->getToken()->pos == Token::LBRACKET) {
+		if (L->getToken()->id == Token::LBRACKET) {
 			L->nextToken();
 			if ((mode & TYPE) != 0) {
 				int oldmode = mode;
@@ -1299,7 +1304,8 @@ Expression* Parser::literal(string prefix, int pos) {
 		break;
 	case Token::TRUE:
 	case Token::FALSE:
-		t = TreeMaker::makeLiteral(pos, TypeTags::BOOLEAN, L->getToken()->name=="true"?"1":"0");
+		t = TreeMaker::makeLiteral(pos, TypeTags::BOOLEAN,
+				L->getToken()->name == "true" ? "1" : "0");
 		break;
 	case Token::NULL_:
 		t = TreeMaker::makeLiteral(pos, TypeTags::BOT, L->getToken()->name);
@@ -1511,7 +1517,7 @@ int Parser::prec(int token) {
 
 void Parser::reportSyntaxError(int pos, string msg) {
 	setErrorEndPos(pos);
-	log->report(pos, Log::ERROR, msg);
+	log->report(pos, Log::ERROR_Parser, msg);
 }
 
 void Parser::illegal() {

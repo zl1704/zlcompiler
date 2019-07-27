@@ -40,8 +40,8 @@ void Compiler::compile(string fileName){
 	CompilationUnit* unit = parser->parse();
 	vector<CompilationUnit* > units;
 	units.push_back(unit);
-	//if(log->getErrNums()>0)
-	//		return ;
+	if(log->getErrNums()>0)
+			return ;
 	enter->main(units);
 	//第二阶段
 	compile2();

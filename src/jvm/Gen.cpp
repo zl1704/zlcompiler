@@ -229,7 +229,7 @@ int Gen::initCode(MethodDecl* md,Env<GenContext*>* env){
 	}
 	code->markAlive();
 	//没有附加信息，start从0开始
-	int startpc = 0;
+	int startpc = code->entryPoint();
 	return startpc;
 
 }
@@ -240,6 +240,9 @@ int Gen::initCode(MethodDecl* md,Env<GenContext*>* env){
  *	2. 进入各方法生成代码
  */
 void Gen::genClass(Env<AttrContext*>* env, ClassDecl* cdef){
+
+	if(util::debug)
+		cout << "=========Gen Start!  "<< endl;
 
 	//defs只剩方法，在write阶段变量从 classsym中符号表中找
 
