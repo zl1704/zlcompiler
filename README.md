@@ -68,7 +68,7 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 		
 		```
 		
-			class A{
+		class A{
 
 			public void fun(double a, double b){
 				fun2(1,2);
