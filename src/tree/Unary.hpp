@@ -25,6 +25,9 @@ public:
 	virtual int getTag() {
 		return opcode;
 	}
+	void setTag(int tag) {
+		opcode = tag;
+	}
 	virtual ~Unary();
 };
 

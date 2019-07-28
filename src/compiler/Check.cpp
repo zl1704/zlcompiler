@@ -246,6 +246,7 @@ Expression* Check::skipParens(Expression* tree) {
 
 Symbol* Check::symbol(Tree* tree) {
 	tree = skipParens(tree);
+	Ident* ident;
 	switch (tree->getTag()) {
 	case Tree::IDENT:
 		return ((Ident*) tree)->sym;

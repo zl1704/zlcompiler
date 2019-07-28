@@ -48,7 +48,7 @@ Item* Item::coerce(int targetcode){
 	}
 }
 Item* Item::coerce(Type* targettype){
-	return coerce(targettype->tag);
+	return coerce(ByteCodes::typecode(targettype));
 }
 CondItem* Item::mkCond(){
 	load();
@@ -214,7 +214,7 @@ Item* MemberItem::invoke() {
 	MethodType* mt = (MethodType*) member->type;
 	int rescode = ByteCodes::typecode(mt->restype);
 	//没有接口和继承，全部special调用
-	code->emitInvokespecial(code->pool->put(member), mt);
+	code->emitInvokevirtual(code->pool->put(member), mt);
 	return items->stackItem[rescode];
 }
 void  MemberItem::duplicate(){
@@ -255,10 +255,10 @@ bool ImmediateItem::isPosZero(jdouble x){
 CondItem* ImmediateItem::mkCond() {
 	int ival = util::strToNum<int>(ctype->str);
 	if (ival != 0) {
-		return items->makeCondItem(ByteCodes::dontgoto, NULL, NULL);
+		return items->makeCondItem(ByteCodes::goto_, NULL, NULL);
 
 	} else {
-		return items->makeCondItem(ByteCodes::goto_, NULL, NULL);
+		return items->makeCondItem(ByteCodes::dontgoto, NULL, NULL);
 
 	}
 }

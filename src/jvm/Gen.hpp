@@ -9,11 +9,13 @@
 #define JVM_GEN_HPP_
 #include "../util/global.hpp"
 #include "../util/includeGlobal.hpp"
+#include "../vistor/Pretty.hpp"
 #include "../tree/Tree.hpp"
 #include "../util/Name.hpp"
 #include "../compiler/Check.hpp"
 #include "Code.hpp"
 #include "Item.hpp"
+using namespace util;
 /**
  * 代码生成阶段
  * start 2019.7.7

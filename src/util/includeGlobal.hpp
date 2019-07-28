@@ -7,7 +7,6 @@
 //
 //#ifndef UTIL_INCLUDEGLOBAL_HPP_
 //#define UTIL_INCLUDEGLOBAL_HPP_
-
 #include "Source.hpp"
 #include "../code/Flags.hpp"
 #include "../code/TypeTags.hpp"
@@ -17,6 +16,7 @@
 #include "Context.hpp"
 #include "Log.hpp"
 #include "../compiler/Env.hpp"
+
 
 
 //#endif /* UTIL_INCLUDEGLOBAL_HPP_ */

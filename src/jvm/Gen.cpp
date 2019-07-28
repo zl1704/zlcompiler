@@ -22,9 +22,10 @@ Gen::Gen() {
 	 log = Log::instance();
 	 syms = Symtab::instance();
 	 chk = Check::instance();
+	 vector<Type*> nullVector;
+	 methodType = new MethodType(nullVector,NULL,syms->methodClass);
 	 attrEnv = NULL;
 	 toplevel = NULL;
-	 methodType = NULL;
 	 code = NULL;
 	 env = NULL;
 	 pt = NULL;
@@ -73,11 +74,11 @@ void Gen::genArgs(vector<Expression*> trees, vector<Type*> ts){
  * 生成条件表达项，返回值为true,false
  */
 CondItem* Gen::genCond(Tree* tree){
-
+	Pretty::debug("Gen::genCond: \t",tree);
 	Tree* innerTree = Check::skipParens(tree);
-	if(tree->getTag() == Tree::CONDEXPR){
+	if(innerTree->getTag() == Tree::CONDEXPR){
 		// (cond)?(1):(2)
-		Conditional* ctree = (Conditional*) tree;
+		Conditional* ctree = (Conditional*) innerTree;
 		CondItem* cond = genCond(ctree->cond);
 		//确定真值情况
 		if(cond->isTrue()){
@@ -194,7 +195,8 @@ void Gen::genLoop(Statement* loop, Statement* body, Expression* cond,
  *
  */
 void Gen::genMethod(MethodDecl* md,Env<GenContext*>* env){
-
+	if(debug)
+		cout << "Gen::genMethod:\t "<<md->name<<endl;
 	int startpc = initCode(md,env);
 	genStat(md->body,env);
 	if(code->isAlive()){
@@ -219,7 +221,7 @@ int Gen::initCode(MethodDecl* md,Env<GenContext*>* env){
 	items = new Items(pool,code);
 	//给非静态方法添加this和参数到局部变量表中
 	//此方法为非静态方法，构造函数为非静态方法
-	if(md->sym->flags_field&Flags::STATIC==0){
+	if((md->sym->flags_field&Flags::STATIC)==0){
 
 		code->setDefined(code->newLocalVar(new VarSymbol(Flags::FINAL,Name::_this,md->sym->owner->type,md->sym->owner)));
 	}
@@ -242,7 +244,7 @@ int Gen::initCode(MethodDecl* md,Env<GenContext*>* env){
 void Gen::genClass(Env<AttrContext*>* env, ClassDecl* cdef){
 
 	if(util::debug)
-		cout << "=========Gen Start!  "<< endl;
+		cout << "\n=========Gen Start!  "<< endl;
 
 	//defs只剩方法，在write阶段变量从 classsym中符号表中找
 
@@ -411,6 +413,7 @@ void Gen::visitDoLoop(DoWhileLoop* tree) {
 	genLoop(tree,tree->body,tree->cond,step,false);
 }
 void Gen::visitWhileLoop(WhileLoop* tree) {
+	Pretty::debug("Gen::visitWhileLoop:\n",tree);
 	vector<ExpressionStatement*> step;
 	genLoop(tree,tree->body,tree->cond,step,true);
 }
@@ -426,12 +429,50 @@ void Gen::visitSwitch(Switch* tree) {
 void Gen::visitCase(Case* tree) {
 }
 
+/**
+ * (cond)?(1):(2)
+ * 按if-else翻译
+ */
 void Gen::visitConditional(Conditional* tree) {
 
+	Pretty::debug("Gen::visitConditional :\t",tree);
+	CondItem* cond = genCond(tree->cond);
+	Chain* elseChain = cond->jumpFalse();
+	//表达式出口
+	Chain* thenExit = NULL;
+	//为false,无需生成(1)的代码
+	if(!cond->isFalse()){
+		code->resolve(cond->trueJumps);
+		int startpc = code->curPc();
+		genExpr(tree->truepart,pt)->load();
+		code->state->forceStackTop(tree->type);
+		thenExit = code->branch(ByteCodes::goto_);
+	}
+	if(elseChain!=NULL){
+		code->resolve(elseChain);
+		int startpc = code->curPc();
+		genExpr(tree->falsepart,pt)->load();
+		code->state->forceStackTop(tree->type);
+	}
+	code->resolve(thenExit);
+	result = items->makeStackItem(pt);
 }
 void Gen::visitIf(If* tree) {
 }
 void Gen::visitExec(ExpressionStatement* tree) {
+	Pretty::debug("\nGen::visitExec: \t",tree);
+	//后缀转前缀  ，x++;为一条语句才能转，优化
+	switch(tree->expr->getTag()){
+	case Tree::POSTINC:
+		((Unary*)tree->expr)->setTag(Tree::PREINC);
+		break;
+	case Tree::POSTDEC:
+		((Unary*) tree->expr)->setTag(Tree::PREINC);
+		break;
+
+	}
+
+	genExpr(tree->expr,tree->expr->type)->drop();
 }
 void Gen::visitBreak(Break* tree) {
 	env->info->addExit(code->branch(ByteCodes::goto_));
@@ -442,6 +483,10 @@ void Gen::visitContinue(Continue* tree) {
 void Gen::visitReturn(Return* tree) {
 }
 void Gen::visitApply(MethodInvocation* tree) {
+	Pretty::debug("Gen::visitApply:\t",tree);
+	Item* m = genExpr(tree->meth,methodType);
+	genArgs(tree->args,((MethodType*)Check::symbol(tree->meth)->type)->argtypes);
+	result = m->invoke();
 }
 void Gen::visitNewClass(NewClass* tree) {
 }
@@ -536,21 +581,19 @@ Item*  Gen::completeBinop(Tree* lhs,Tree* rhs,OperatorSymbol* opsym){
 			code->emitop0(opcode >>ByteCodes::preShift);
 			opcode = opcode & 0xFF;
 		}
-		//如果是比较跳转指令，暂时不输出指令，等待后续回填,if-else 会调用对应jumptrue或jumpfalse
-		if ((ByteCodes::ifeq <= opcode && opcode <= ByteCodes::if_acmpne)
-				|| opcode == ByteCodes::if_acmp_null
-				|| opcode == ByteCodes::if_acmp_nonnull) {
-			return items->makeCondItem(opcode,NULL,NULL);
-		}else{
-			code->emitop0(opcode);
-			return items->makeStackItem(mt->restype);
-
-		}
-
 
 	}
 
+	//如果是比较跳转指令，暂时不输出指令，等待后续回填,if-else 会调用对应jumptrue或jumpfalse
+	if ((ByteCodes::ifeq <= opcode && opcode <= ByteCodes::if_acmpne)
+			|| opcode == ByteCodes::if_acmp_null
+			|| opcode == ByteCodes::if_acmp_nonnull) {
+		return items->makeCondItem(opcode, NULL, NULL);
+	} else {
+		code->emitop0(opcode);
+		return items->makeStackItem(mt->restype);
 
+	}
 
 }
 
@@ -563,7 +606,37 @@ void Gen::visitIndexed(ArrayAccess* tree) {
 }
 void Gen::visitSelect(FieldAccess* tree) {
 }
+
 void Gen::visitIdent(Ident* tree) {
+	Symbol* sym = tree->sym;
+	//this ,super
+	if(sym->name==Name::_this || tree->name == Name::super ){
+		Item* res = tree->name==Name::_this ? items->makeThisItem():items->makeSuperItem();
+		//构造方法调用
+		if(sym->kind == Kinds::MTH){
+			res->load();
+			res = items->makeMemberItem(sym);
+
+		}
+		result = res;
+	}else if(sym->kind == Kinds::VAR && sym->owner->kind == Kinds::MTH){
+		//局部变量
+		result = items->makeLocalItem((VarSymbol*)sym);
+	}else if((sym->flags_field & Flags::STATIC)!=0){
+		//静态
+		result = items->makeStaticItem(sym);
+	}else{
+		//成员，父类
+		items->makeThisItem()->load();
+		/**
+		 * 是否要判断变量所在位置？在Attr阶段完成？
+		 */
+		result = items->makeMemberItem(sym);
+
+	}
+
+
+
 }
 void Gen::visitLiteral(Literal* tree) {
 }

@@ -24,6 +24,15 @@ Pretty* Pretty::instance() {
 	}
 	return pretty;
 }
+void Pretty::debug(string msg,Tree* tree){
+	if(util::debug){
+		cout << msg;
+		tree->accept(instance());
+		cout << endl;
+	}
+
+}
+
 
 /**
  * 打印函数实现
@@ -410,7 +419,7 @@ void Pretty::visitReturn(Return* tree) {
 }
 void Pretty::visitApply(MethodInvocation* tree) {
 	try {
-
+		tree->getTag();
 		printExpr(tree->meth);
 		print("(");
 		printExprs(tree->args);

@@ -16,8 +16,6 @@
 #include <iostream>
 #include <sstream>    //使用stringstream需要引入这个头文件
 #include <fstream>
-
-
 using namespace std;
 namespace util {
 static bool debug = true;
@@ -64,6 +62,7 @@ vector<T> ListOf(T t...) {
 	vec.push_back(t);
 	return vec;
 }
+
 
 
 }

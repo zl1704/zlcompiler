@@ -137,6 +137,7 @@ Code::Code(MethodSymbol* sym, Pool* pool) {
 	size = 64;
 	lvs = new LocalVar*[20];
 	lvsize = 20;
+	memset(lvs,NULL, lvsize * sizeof(LocalVar*));
 	alive = false;
 	max_locals = 0;
 	max_stack = 0;
@@ -185,7 +186,12 @@ int Code::width(int tc) {
 int Code::width(Type* type) {
 	return type == NULL ? 0 : width(ByteCodes::typecode(type));
 }
-
+int Code::width(vector<Type*> types){
+	int w = 0;
+	for(int i = 0; i < types.size();i++)
+		w = w + width(types[i]);
+	return w;
+}
 void Code::checkCode() {
 	if (cp == size) {
 		jbyte* new_code = new jbyte[size * 2];
@@ -199,7 +205,7 @@ void Code::checkCode() {
 int Code::curPc() {
 	if (pendingJumps != NULL)
 		resolvePending();
-	//fixedPc = true;
+	fixedPc = true;
 	return cp;
 }
 int Code::entryPoint() {
@@ -250,7 +256,7 @@ void Code::resolve(Chain* c, int target) {
 			if (alive) {
 
 			} else {
-
+				alive = true;
 			}
 
 		}
@@ -259,7 +265,7 @@ void Code::resolve(Chain* c, int target) {
 
 }
 void Code::resolve(Chain* c) {
-	Chain::merge(c, pendingJumps);
+	pendingJumps = Chain::merge(c, pendingJumps);
 }
 
 Chain* Code::branch(int opcode) {
@@ -389,17 +395,33 @@ void Code::markStatBegin() {
  * Emit code
  */
 
-void Code::emitInvokedynamic(int meth, Type* mtype) {
+void Code::emitInvokedynamic(int meth, MethodType* mtype) {
 
 }
-void Code::emitInvokespecial(int meth, Type* mtype) {
+/**
+ * 包括实例初始化方法
+ * 私有方法
+ * 父类方法 :子类没有重写，在父类中
+ */
+void Code::emitInvokespecial(int meth, MethodType* mtype) {
+
 
 }
-void Code::emitInvokestatic(int meth, Type* mtype) {
+void Code::emitInvokestatic(int meth, MethodType* mtype) {
 
 }
-void Code::emitInvokevirtual(int meth, Type mtype) {
 
+/**
+ * 根据对象的实际类型进行分派
+ */
+void Code::emitInvokevirtual(int meth, MethodType* mtype) {
+	int argsize = width(mtype->argtypes);
+	emitop(ByteCodes::invokevirtual);
+	if(!alive)
+		return;
+	emit2(meth);
+	state->pop(argsize+1);
+	state->push(mtype->restype);
 }
 int Code::emitJump(int op) {
 	//等待回填
@@ -410,6 +432,9 @@ int Code::emitJump(int op) {
  * 输出一个无操作数的操作码,并管理栈中状态(TOS)
  */
 void Code::emitop0(int op) {
+	if (debug) {
+		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << endl;
+	}
 	emitop(op);
 	if (!alive)
 		return;
@@ -817,6 +842,10 @@ Type* Code::typeForPool(void* cd) {
  * bipush ldc1
  */
 void Code::emitop1(int op, int od) {
+	if (util::debug) {
+		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << "\t " << od << endl;
+	}
+
 	emitop(op);
 	if (!alive)
 		return;
@@ -840,6 +869,9 @@ void Code::emitop1(int op, int od) {
  * 最多两个字节，局部变量表最大65535
  */
 void Code::emitop1w(int op, int od) {
+	if (util::debug) {
+		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << " \t " << od << endl;
+	}
 	if (od > 0xFF) {
 		emitop(ByteCodes::wide);
 		emitop(op);
@@ -890,7 +922,10 @@ void Code::emitop1w(int op, int od) {
  * od2:第二操作数
  */
 void Code::emitop1w(int op, int od1, int od2) {
-
+	if (util::debug) {
+		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << "\t" << od1 << " , "
+				<< od2 << endl;
+	}
 	if (od1 > 0xFF || od2 < -128 || od2 > 127) {
 		emitop(ByteCodes::wide);
 		emitop(op);
@@ -912,6 +947,9 @@ void Code::emitop1w(int op, int od1, int od2) {
 }
 
 void Code::emitop2(int op, int od) {
+	if (util::debug) {
+		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << "\t" << od << endl;
+	}
 	emitop(op);
 	if (!alive)
 		return;
@@ -953,6 +991,7 @@ void Code::emitop2(int op, int od) {
 		break;
 	case ByteCodes::goto_:
 		markDead();
+		break;
 	case ByteCodes::getfield:
 		state->push(((Symbol*) (pool->pool[od]))->type);
 		break;
@@ -984,6 +1023,9 @@ void Code::emitop2(int op, int od) {
 	}
 }
 void Code::emitop4(int op, int od) {
+	if (util::debug) {
+		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << "\t" << od << endl;
+	}
 	emitop(op);
 	if (!alive)
 		return;
@@ -1000,9 +1042,6 @@ void Code::emitop4(int op, int od) {
 }
 
 void Code::emit1(int op) {
-	if (util::debug) {
-		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << endl;
-	}
 	if (!alive)
 		return;
 	checkCode();

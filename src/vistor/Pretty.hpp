@@ -18,6 +18,7 @@ public:
 	static  int* prettyKey ;
 	int width;
 	static Pretty* instance();
+	static void debug(string msg,Tree* tree);
 
 	Pretty();
 	virtual ~Pretty();

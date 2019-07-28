@@ -64,5 +64,42 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 	
 	2. do-while与while形式类似，不同的地方在于生成cond的地方在body之后，然后并回填true,false跳转链
 	
+	3. 方法调用语句
+		
+		(```)
+		
+			class A{
+
+			public void fun(double a, double b){
+				fun2(1,2);
+				int c = (a>b?false:true) ? fun(1,2):2;
+			
+			}
+		
+			public int fun2(int a,int b){
+				return a+b;
+			
+			}
+
+		}
+		
+		(```)
+	
+	
+		Gen::visitExec:	fun(1,2);
+		生成指令：
+		
+		(```)
+		
+		Gen :	 aload_0 //压入this
+		Gen :	 iconst_1
+		Gen :	 iconst_2
+		Gen :	 invokespecial
+		Gen :	 pop    //因为fun2有返回值，Exec之后需要将返回值从栈中弹出
+		
+		(```)
+		
+		JAVA中参数入栈由调用者维护，出栈由JVM维护， 实现方式为push return_address + jmp target（call）,  pop + jmp return_address(在_return指令中完成)
+	
 	
 

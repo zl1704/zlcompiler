@@ -155,6 +155,7 @@ public:
 	//对象长度
 	static int width(int tc);
 	static int width(Type* type);
+	static int width(vector<Type*> types);
 	void addLocalVar(VarSymbol* v);
 	int newLocalVar(VarSymbol* v);
 	int newLocalVar(Type* type);
@@ -181,10 +182,10 @@ public:
 
 
 	//Emit code
-	void emitInvokedynamic(int meth,Type* mtype);
-	void emitInvokespecial(int meth,Type* mtype);
-	void emitInvokestatic(int meth,Type* mtype);
-	void emitInvokevirtual(int meth, Type mtype);
+	void emitInvokedynamic(int meth,MethodType* mtype);
+	void emitInvokespecial(int meth,MethodType* mtype);
+	void emitInvokestatic(int meth,MethodType* mtype);
+	void emitInvokevirtual(int meth, MethodType* mtype);
 	int emitJump(int op);
 	void emitop0(int op);
 	void emitop1(int op,int od);

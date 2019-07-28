@@ -179,10 +179,12 @@ public:
 	int opcode;
 	Chain* trueJumps;
 	Chain* falseJumps;
-	CondItem(int opcode,Chain* tureJumps,Chain* falseJumps,Code* code){
+	CondItem(int opcode,Chain* trueJumps,Chain* falseJumps,Code* code){
 		this->typecode = ByteCodes::BYTEcode;
 		this->trueJumps = trueJumps;
+		this->falseJumps = falseJumps;
 		this->opcode = opcode;
+		this->code = code;
 	}
 	virtual Item* load();
 	virtual void  drop();
@@ -230,6 +232,14 @@ public:
 		return stackItem[ByteCodes::typecode(type)];
 	}
 
+	Item* makeThisItem(){
+		return thisItem;
+
+	}
+
+	Item* makeSuperItem(){
+		return superItem;
+	}
 	LocalItem* makeLocalItem(VarSymbol* v){
 		return new LocalItem(v->type,v->adr,code);
 	}

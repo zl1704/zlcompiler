@@ -36,18 +36,18 @@ void Compiler::compile(string fileName){
 	parser = new Parser(lexer,log);
 	if(log->getErrNums()>0)
 				return ;
-	Pretty* pretty =Pretty::instance();
+
 	CompilationUnit* unit = parser->parse();
 	vector<CompilationUnit* > units;
 	units.push_back(unit);
 	if(log->getErrNums()>0)
 			return ;
 	enter->main(units);
+
 	//第二阶段
 	compile2();
 
 
-	pretty->visitTopLevel(unit);
 
 }
 /**
@@ -65,7 +65,9 @@ void Compiler::compile2(){
 }
 
 void Compiler::generate(Env<AttrContext* >* env){
+	Pretty* pretty =Pretty::instance();
 	ClassDecl* cdef = env->enclClass;
+	pretty->visitClassDef(cdef);
 	gen->genClass(env,cdef);
 
 
