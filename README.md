@@ -86,7 +86,7 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 		```
 	
 	
-		Gen::visitExec:	fun(1,2);
+		1.	Gen::visitExec:	fun(1,2);
 		生成指令：
 		
 		```
@@ -100,6 +100,40 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 		```
 		
 		JAVA中参数入栈由调用者维护，出栈由JVM维护， 实现方式为push return_address + jmp target（call）,  pop + jmp return_address(在_return指令中完成)
-	
+		
+		2.  
+		
+		```
+		
+		Gen::visitWhileLoop:
+			while (a < b) {
+				a = a + 1;
+				a += 1;
+			}
+		
+		//生成代码
+		
+		
+		Gen :	 dload_1
+		Gen :	 dload_3
+		Gen :	 dcmpg
+		Gen :	 ifge	0
+		
+		//a = a+1;
+		Gen :	 dload_1
+		Gen :	 dconst_1
+		Gen :	 dadd
+		Gen :	 dstore_1
+		
+		//a +=1;
+		Gen :	 dload_1
+		Gen :	 dload_1
+		Gen :	 dconst_1
+		Gen :	 dadd
+		Gen :	 dstore_1
+		Gen :	 goto_	0
+		Gen :	 return_
+
+		
 	
 

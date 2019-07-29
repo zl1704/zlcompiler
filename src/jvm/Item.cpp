@@ -326,19 +326,19 @@ Item* ImmediateItem::coerce(int targetcode) {
 				ConstType::create(TypeTags::LONG, ctype->str));
 	case ByteCodes::DOUBLEcode:
 		return items->makeImmediateItem(
-				ConstType::create(TypeTags::LONG, ctype->str));
+				ConstType::create(TypeTags::DOUBLE, ctype->str));
 	case ByteCodes::FLOATcode:
 		return items->makeImmediateItem(
-				ConstType::create(TypeTags::LONG, ctype->str));
+				ConstType::create(TypeTags::FLOAT, ctype->str));
 	case ByteCodes::CHARcode:
 		return items->makeImmediateItem(
-				ConstType::create(TypeTags::LONG, ctype->str));
+				ConstType::create(TypeTags::CHAR, ctype->str));
 	case ByteCodes::SHORTcode:
 		return items->makeImmediateItem(
-				ConstType::create(TypeTags::LONG, ctype->str));
+				ConstType::create(TypeTags::SHORT, ctype->str));
 	case ByteCodes::BYTEcode:
 		return items->makeImmediateItem(
-				ConstType::create(TypeTags::LONG, ctype->str));
+				ConstType::create(TypeTags::BYTE, ctype->str));
 	default:
 		return Item::coerce(targetcode);
 

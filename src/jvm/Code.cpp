@@ -433,7 +433,7 @@ int Code::emitJump(int op) {
  */
 void Code::emitop0(int op) {
 	if (debug) {
-		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << endl;
+		cout << " \tGen :\t " << ByteCodes::getCodeStr(op) << endl;
 	}
 	emitop(op);
 	if (!alive)
@@ -843,7 +843,7 @@ Type* Code::typeForPool(void* cd) {
  */
 void Code::emitop1(int op, int od) {
 	if (util::debug) {
-		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << "\t " << od << endl;
+		cout << " \tGen :\t " << ByteCodes::getCodeStr(op) << "\t " << od << endl;
 	}
 
 	emitop(op);
@@ -870,7 +870,7 @@ void Code::emitop1(int op, int od) {
  */
 void Code::emitop1w(int op, int od) {
 	if (util::debug) {
-		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << " \t " << od << endl;
+		cout << " \tGen :\t " << ByteCodes::getCodeStr(op) << " \t " << od << endl;
 	}
 	if (od > 0xFF) {
 		emitop(ByteCodes::wide);
@@ -923,7 +923,7 @@ void Code::emitop1w(int op, int od) {
  */
 void Code::emitop1w(int op, int od1, int od2) {
 	if (util::debug) {
-		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << "\t" << od1 << " , "
+		cout << "\tGen :\t " << ByteCodes::getCodeStr(op) << "\t" << od1 << " , "
 				<< od2 << endl;
 	}
 	if (od1 > 0xFF || od2 < -128 || od2 > 127) {
@@ -948,7 +948,7 @@ void Code::emitop1w(int op, int od1, int od2) {
 
 void Code::emitop2(int op, int od) {
 	if (util::debug) {
-		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << "\t" << od << endl;
+		cout << " \tGen :\t " << ByteCodes::getCodeStr(op) << "\t" << od << endl;
 	}
 	emitop(op);
 	if (!alive)
@@ -1024,7 +1024,7 @@ void Code::emitop2(int op, int od) {
 }
 void Code::emitop4(int op, int od) {
 	if (util::debug) {
-		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << "\t" << od << endl;
+		cout << " \tGen :\t " << ByteCodes::getCodeStr(op) << "\t" << od << endl;
 	}
 	emitop(op);
 	if (!alive)

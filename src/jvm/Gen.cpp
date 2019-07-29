@@ -74,7 +74,7 @@ void Gen::genArgs(vector<Expression*> trees, vector<Type*> ts){
  * 生成条件表达项，返回值为true,false
  */
 CondItem* Gen::genCond(Tree* tree){
-	Pretty::debug("Gen::genCond: \t",tree);
+	Pretty::debug("\nGen::genCond: \t",tree);
 	Tree* innerTree = Check::skipParens(tree);
 	if(innerTree->getTag() == Tree::CONDEXPR){
 		// (cond)?(1):(2)
@@ -196,7 +196,7 @@ void Gen::genLoop(Statement* loop, Statement* body, Expression* cond,
  */
 void Gen::genMethod(MethodDecl* md,Env<GenContext*>* env){
 	if(debug)
-		cout << "Gen::genMethod:\t "<<md->name<<endl;
+		cout << "\nGen::genMethod:\t "<<md->name<<endl;
 	int startpc = initCode(md,env);
 	genStat(md->body,env);
 	if(code->isAlive()){
@@ -366,14 +366,6 @@ void Gen::fillMethod(MethodDecl* md ,vector<Statement*> initCode){
 
 
 
-void Gen::visitTopLevel(CompilationUnit* tree) {
-}
-
-
-
-void Gen::visitClassDef(ClassDecl* tree) {
-
-}
 
 void Gen::visitMethodDef(MethodDecl* tree) {
 	Env<GenContext*> * localEnv = env->dup(tree);
@@ -391,8 +383,7 @@ void Gen::visitVarDef(VariableDecl* tree) {
 		items->makeLocalItem(v)->store();
 	}
 }
-void Gen::visitSkip(Skip* tree) {
-}
+
 void Gen::visitBlock(Block* tree) {
 	int limit = code->nextreg;
 	Env<GenContext*>* localEnv = env->dup(tree);
@@ -413,7 +404,7 @@ void Gen::visitDoLoop(DoWhileLoop* tree) {
 	genLoop(tree,tree->body,tree->cond,step,false);
 }
 void Gen::visitWhileLoop(WhileLoop* tree) {
-	Pretty::debug("Gen::visitWhileLoop:\n",tree);
+	Pretty::debug("\nGen::visitWhileLoop:\n",tree,4);
 	vector<ExpressionStatement*> step;
 	genLoop(tree,tree->body,tree->cond,step,true);
 }
@@ -435,7 +426,7 @@ void Gen::visitCase(Case* tree) {
  */
 void Gen::visitConditional(Conditional* tree) {
 
-	Pretty::debug("Gen::visitConditional :\t",tree);
+	Pretty::debug("\nGen::visitConditional :\t",tree,4);
 	CondItem* cond = genCond(tree->cond);
 	Chain* elseChain = cond->jumpFalse();
 	//表达式出口
@@ -471,7 +462,9 @@ void Gen::visitExec(ExpressionStatement* tree) {
 		break;
 
 	}
-
+	/*
+	 * Assign::drop:执行 lhs.store();
+	 */
 	genExpr(tree->expr,tree->expr->type)->drop();
 }
 void Gen::visitBreak(Break* tree) {
@@ -481,9 +474,16 @@ void Gen::visitContinue(Continue* tree) {
 	env->info->addCont(code->branch(ByteCodes::goto_));
 }
 void Gen::visitReturn(Return* tree) {
+	//有返回值
+	if(tree->expr!= NULL){
+		genExpr(tree->expr,tree->expr->type)->load();
+		code->emitop0(ByteCodes::ireturn + Code::truncate(ByteCodes::typecode(tree->expr->type)));
+	}else{
+		code->emitop0(ByteCodes::return_);
+	}
 }
 void Gen::visitApply(MethodInvocation* tree) {
-	Pretty::debug("Gen::visitApply:\t",tree);
+	Pretty::debug("\nGen::visitApply:\t",tree,4);
 	Item* m = genExpr(tree->meth,methodType);
 	genArgs(tree->args,((MethodType*)Check::symbol(tree->meth)->type)->argtypes);
 	result = m->invoke();
@@ -493,12 +493,44 @@ void Gen::visitNewClass(NewClass* tree) {
 void Gen::visitNewArray(NewArray* tree) {
 }
 void Gen::visitParens(Parens* tree) {
+	result = genExpr(tree->expr,tree->expr->type);
 }
 void Gen::visitAssign(Assign* tree) {
+	Pretty::debug("\nGen::visitAssign:\t",tree,4);
+	Item* l = genExpr(tree->lhs,tree->lhs->type);
+	genExpr(tree->rhs,tree->rhs->type)->load();
+	result = items->makeAssinItem(l);
+	//由Exec store
+
 }
+/**
+ * ===>  a = a + b;
+ */
 void Gen::visitAssignop(AssignOp* tree) {
+	OperatorSymbol* opsym = (OperatorSymbol*)tree->opsym;
+	Item* l ;
+	if(opsym->opcode == ByteCodes::string_add){
+
+	}else{
+		l = genExpr(tree->lhs,tree->lhs->type);
+		l->load();
+		//复制一个与右操作数运算
+		//????
+		l->duplicate();
+		l->coerce(((MethodType*)opsym->type)->argtypes[0])->load();
+		//完成二元操作
+		completeBinop(tree->lhs,tree->rhs,opsym)->coerce(tree->lhs->type);
+	}
+	result = items->makeAssinItem(l);
 }
+
+/**
+ * 主要是 ++x ,x++运算
+ */
 void Gen::visitUnary(Unary* tree) {
+
+
+
 }
 
 void Gen::visitBinary(Binary* tree) {
@@ -590,6 +622,7 @@ Item*  Gen::completeBinop(Tree* lhs,Tree* rhs,OperatorSymbol* opsym){
 			|| opcode == ByteCodes::if_acmp_nonnull) {
 		return items->makeCondItem(opcode, NULL, NULL);
 	} else {
+		//运算结果在栈顶
 		code->emitop0(opcode);
 		return items->makeStackItem(mt->restype);
 
@@ -639,16 +672,39 @@ void Gen::visitIdent(Ident* tree) {
 
 }
 void Gen::visitLiteral(Literal* tree) {
+
+
+}
+
+
+
+
+
+/**
+ * not used
+ */
+
+
+void Gen::visitTree(Tree* tree) {
+}
+
+void Gen::visitSkip(Skip* tree) {
+}
+void Gen::visitTopLevel(CompilationUnit* tree) {
+}
+
+
+
+void Gen::visitClassDef(ClassDecl* tree) {
+
 }
 void Gen::visitTypeIdent(PrimitiveTypeTree* tree) {
 }
 void Gen::visitTypeArray(ArrayTypeTree* tree) {
 }
+
 void Gen::visitModifiers(Modifiers* tree) {
 }
-void Gen::visitTree(Tree* tree) {
-}
-
 
 /**
  * GenContext
