@@ -46,7 +46,7 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 
 	循环的翻译，有两种循环，whlie(for循环:init+while), do-while
 	
-	1. while:
+	### 1. while:
 	
 			1. 生成cond语句
 			
@@ -62,9 +62,9 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 			
 			
 	
-	2. do-while与while形式类似，不同的地方在于生成cond的地方在body之后，然后并回填true,false跳转链
+	### 2. do-while与while形式类似，不同的地方在于生成cond的地方在body之后，然后并回填true,false跳转链
 	
-	3. 方法调用语句
+	### 3. 方法调用语句
 		
 		```
 		
@@ -101,7 +101,7 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 		
 		JAVA中参数入栈由调用者维护，出栈由JVM维护， 实现方式为push return_address + jmp target（call）,  pop + jmp return_address(在_return指令中完成)
 		
-	3. 循环 ，赋值 
+	### 4. 循环 ，赋值 
 		
 		```
 		
