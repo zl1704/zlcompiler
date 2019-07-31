@@ -528,7 +528,37 @@ void Gen::visitAssignop(AssignOp* tree) {
  * 主要是 ++x ,x++运算
  */
 void Gen::visitUnary(Unary* tree) {
+	OperatorSymbol* opsym = (OperatorSymbol*)tree->sym;
+	MethodType* mt = (MethodType*)opsym->type;
+	if(tree->opcode == Tree::NOT){
+		// ! 逻辑运算
+		CondItem*  cond = genCond(tree->arg);
+		result = cond->negate();
+	}else{
+		//算数运算
+		Item* item = genExpr(tree->arg,mt->argtypes[0]);
 
+		if(tree->opcode == Tree::NEG){
+
+		}else if(tree->opcode == Tree::COMPL){
+
+		}else if(tree->opcode == Tree::PREINC){
+
+
+		}else if(tree->opcode == Tree::PREDEC){
+
+		}else if(tree->opcode == Tree::POSTINC){
+
+		}else if(tree->opcode == Tree::POSTDEC){
+
+		}else if(tree->opcode == Tree::NULLCHK){
+
+		}else{
+
+			cout << "Gen::visitUnary :未定义的一元操作" << endl;
+		}
+
+	}
 
 
 }

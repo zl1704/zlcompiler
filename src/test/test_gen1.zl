@@ -6,6 +6,8 @@ class A{
 		while(a<b){
 			a = a+1;
 			a+=1;
+			c++;
+			fun(++c,c--);
 		}
 	}
 	
