@@ -68,8 +68,8 @@ public:
 	 */
 	vector<Tree*> fillInitDefs(vector<Tree*> defs,ClassSymbol* csym);
 	void fillMethod(MethodDecl* md ,vector<Statement*> initCode);
-
-
+	//load 0
+	int zero(int tc);
 
 
 

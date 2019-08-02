@@ -364,6 +364,25 @@ void Gen::fillMethod(MethodDecl* md ,vector<Statement*> initCode){
 }
 
 
+int Gen::zero(int tc){
+
+	switch (tc) {
+	case ByteCodes::INTcode:
+	case ByteCodes::BYTEcode:
+	case ByteCodes::SHORTcode:
+	case ByteCodes::CHARcode:
+		return ByteCodes::iconst_0;
+	case ByteCodes::LONGcode:
+		return ByteCodes::lconst_0;
+	case ByteCodes::FLOATcode:
+		return ByteCodes::fconst_0;
+	case ByteCodes::DOUBLEcode:
+		return ByteCodes::dconst_0;
+	default:
+		return -1;
+	}
+}
+
 
 
 
@@ -528,6 +547,7 @@ void Gen::visitAssignop(AssignOp* tree) {
  * 主要是 ++x ,x++运算
  */
 void Gen::visitUnary(Unary* tree) {
+	Pretty::debug("\nGen::visitUnary: \t",tree);
 	OperatorSymbol* opsym = (OperatorSymbol*)tree->sym;
 	MethodType* mt = (MethodType*)opsym->type;
 	if(tree->opcode == Tree::NOT){
@@ -538,20 +558,77 @@ void Gen::visitUnary(Unary* tree) {
 		//算数运算
 		Item* item = genExpr(tree->arg,mt->argtypes[0]);
 
-		if(tree->opcode == Tree::NEG){
+		if(tree->getTag() == Tree::NEG){
+			result = item->load();
+			code->emitop0(opsym->opcode);
+		}else if(tree->getTag() == Tree::COMPL){
+			result = item->load();
+			//! 转成  ===>  -1 异或 od
+			if(item->typecode == ByteCodes::LONGcode){
+				items->makeImmediateItem(ConstType::create(TypeTags::LONG,"-1"))->load();
+			}else{
+				code->emitop0(ByteCodes::iconst_m1);
+			}
+			code->emitop0(opsym->opcode);
+		}else if(tree->getTag() == Tree::PREINC||tree->getTag() == Tree::PREDEC){
+			item->duplicate();
+			//int类型自增  通过iinc指令,直接给局部变量int +1
+			if (dynamic_cast<LocalItem*>(item)
+					&& (opsym->opcode == ByteCodes::iadd
+							|| opsym->opcode == ByteCodes::isub)) {
+				((LocalItem*)item)->incr(tree->getTag() == Tree::PREINC? 1 :-1);
+				result = item;
+				//后面通过load()来使用
+			}else{
+				//非int
+				// load() ,add ,store()
+				item->load();
+				code->emitop0(zero(item->typecode)+1);
+				code->emitop0(opsym->opcode);
 
-		}else if(tree->opcode == Tree::COMPL){
+				//char byte short 需要转型
+				if(item->typecode != ByteCodes::INTcode && (Code::truncate(item->typecode)))
+					code->emitop0(ByteCodes::int2byte + item->typecode - ByteCodes::BYTEcode);
 
-		}else if(tree->opcode == Tree::PREINC){
+				item->store();
+				result = items->makeAssinItem(item);
+			}
 
 
-		}else if(tree->opcode == Tree::PREDEC){
 
-		}else if(tree->opcode == Tree::POSTINC){
+		}else if(tree->getTag() == Tree::POSTINC||tree->getTag() == Tree::POSTDEC){
+			item->duplicate();
+			//后缀运算 x++, 先将x load()到栈中
+			if (dynamic_cast<LocalItem*>(item)
+					&& (opsym->opcode == ByteCodes::iadd
+							|| opsym->opcode == ByteCodes::isub)) {
+				Item* res = item->load();
+				((LocalItem*) item)->incr(
+						tree->getTag() == Tree::POSTINC ? 1 : -1);
+				result = res;
+				//后面通过load()来使用
+			} else {
+				//非int
+				// load() ,add ,store()
+				Item* res = item->load();
 
-		}else if(tree->opcode == Tree::POSTDEC){
+				//
+				item->stash(item->typecode);
+				code->emitop0(zero(item->typecode) + 1);
+				code->emitop0(opsym->opcode);
 
-		}else if(tree->opcode == Tree::NULLCHK){
+				//char byte short 需要转型
+				if (item->typecode != ByteCodes::INTcode
+						&& (Code::truncate(item->typecode)))
+					code->emitop0(
+							ByteCodes::int2byte + item->typecode
+									- ByteCodes::BYTEcode);
+
+				item->store();
+				result =res;
+			}
+
+		}else if(tree->getTag() == Tree::NULLCHK){
 
 		}else{
 

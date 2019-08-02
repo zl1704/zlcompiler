@@ -135,5 +135,22 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 		Gen :	 return_
 
 		```
+	### 5. 一元操作
+		
+		```
+		Gen::visitApply:	fun(++c,c--)
+		 	Gen :	 aload_0
+
+		Gen::visitUnary: 	++c
+			Gen :	 iinc	5 , 1   //先自增再load
+			Gen :	 iload 	 5
+
+		Gen::visitUnary: 	c--
+			Gen :	 iload 	 5     //先load再自增
+			Gen :	 iinc	5 , -1
+			Gen :	 pop
+		
+		```
+	
 	
 
