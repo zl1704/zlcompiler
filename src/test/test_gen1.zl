@@ -9,6 +9,18 @@ class A{
 			c++;
 			fun(++c,c--);
 		}
+		
+		
+		if( c >1 ){
+		
+			a+=1;
+			c++;
+			fun(++c,c--);
+		}else{
+		
+			c--;
+			fun(--c,c++);
+		}
 	}
 	
 	public int fun(int a,int b){

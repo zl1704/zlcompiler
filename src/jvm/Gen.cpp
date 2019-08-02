@@ -428,6 +428,7 @@ void Gen::visitWhileLoop(WhileLoop* tree) {
 	genLoop(tree,tree->body,tree->cond,step,true);
 }
 void Gen::visitForLoop(ForLoop* tree) {
+	Pretty::debug("\nGen::visitForLoop:\n",tree,4);
 	int limit = code->nextreg;
 	genStats(tree->init,env);
 	genLoop(tree,tree->body,tree->cond,tree->step,true);
@@ -467,7 +468,36 @@ void Gen::visitConditional(Conditional* tree) {
 	code->resolve(thenExit);
 	result = items->makeStackItem(pt);
 }
+
+/**
+ * if(cond){
+ * 		then
+ * 		goto exit;
+ * }else{
+ *
+ *
+ *
+ * }
+ */
 void Gen::visitIf(If* tree) {
+	Pretty::debug("\nGen::visitIf:\n",tree,4);
+	Chain* thenExit = NULL;
+	int limit = code->nextreg;
+	CondItem* cond = genCond(tree->cond);
+	Chain* elseChain = cond->jumpFalse();
+	if(!cond->isFalse()){
+		code->resolve(cond->trueJumps);
+		genStat(tree->thenpart,env);
+		thenExit = code->branch(ByteCodes::goto_);
+	}
+
+	if(elseChain!=NULL){
+		code->resolve(elseChain);
+		if(tree->elsepart!=NULL)
+			genStat(tree->elsepart,env);
+	}
+	code->resolve(thenExit);
+	code->endScopes(limit);
 }
 void Gen::visitExec(ExpressionStatement* tree) {
 	Pretty::debug("\nGen::visitExec: \t",tree);

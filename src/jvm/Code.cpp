@@ -432,9 +432,7 @@ int Code::emitJump(int op) {
  * 输出一个无操作数的操作码,并管理栈中状态(TOS)
  */
 void Code::emitop0(int op) {
-	if (debug) {
-		cout << " \tGen :\t " << ByteCodes::getCodeStr(op) << endl;
-	}
+
 	emitop(op);
 	if (!alive)
 		return;
@@ -1060,6 +1058,9 @@ void Code::emit4(int od) {
 }
 //输出一个操作码，可能有操作数，后续会生成
 void Code::emitop(int op) {
+	if (debug) {
+		cout << " \tGen :\t " << ByteCodes::getCodeStr(op) << endl;
+	}
 	if (pendingJumps != NULL)
 		resolvePending();
 	if (alive) {
