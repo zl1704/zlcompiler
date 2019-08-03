@@ -71,6 +71,7 @@ public:
 	//load 0
 	int zero(int tc);
 
+	int makeRef(Type* type);
 
 
 	/**

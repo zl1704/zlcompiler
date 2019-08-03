@@ -213,8 +213,10 @@ Item* MemberItem::invoke() {
 	//方法调用
 	MethodType* mt = (MethodType*) member->type;
 	int rescode = ByteCodes::typecode(mt->restype);
-	//没有接口和继承，全部special调用
-	code->emitInvokevirtual(code->pool->put(member), mt);
+	if(_virtual)
+		code->emitInvokevirtual(code->pool->put(member), mt);
+	else
+		code->emitInvokespecial(code->pool->put(member), mt);
 	return items->stackItem[rescode];
 }
 void  MemberItem::duplicate(){

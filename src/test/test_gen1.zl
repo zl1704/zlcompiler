@@ -1,26 +1,15 @@
 class A{
 
+	
+	public int aa = 5;
+	private double dd = 6.6;
+	A(int a){
+		this.a = aa;
+	}
+	
 	public void fun(double a, double b){
-		fun(1,2);
-		int c = (a>b?false:true) ? fun(1,2):2;
-		while(a<b){
-			a = a+1;
-			a+=1;
-			c++;
-			fun(++c,c--);
-		}
-		
-		
-		if( c >1 ){
-		
-			a+=1;
-			c++;
-			fun(++c,c--);
-		}else{
-		
-			c--;
-			fun(--c,c++);
-		}
+		A obj = new A(123);
+		int c = 6 ;
 	}
 	
 	public int fun(int a,int b){

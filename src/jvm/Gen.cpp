@@ -287,12 +287,14 @@ vector<Tree*> Gen::fillInitDefs(vector<Tree*> defs,ClassSymbol* csym){
 				//实例变量总是要初始化
 				if((vsym->flags_field&Flags::STATIC)==0){
 					Statement* init = TreeMaker::makeAssignment(vdef->pos,vsym,vdef->init);
+					init->type = vsym->type;
 					initCode.push_back(init);
 //					cout << "init code size :" << initCode.size()<<endl;
 				}else if(!vsym->type->isConst()){
 					//非静态编译期常量
 					Statement* init = TreeMaker::makeAssignment(vdef->pos, vsym,
 							vdef->init);
+					init->type = vsym->type;
 					cinitCode.push_back(init);
 
 				}
@@ -382,6 +384,13 @@ int Gen::zero(int tc){
 		return -1;
 	}
 }
+//间接项
+int Gen::makeRef(Type* type){
+	if (type->tag == TypeTags::CLASS)
+		return pool->put(type->tsym, Pool::POOL_SYM);
+	return pool->put(type, Pool::POOL_TYPE);
+
+}
 
 
 
@@ -394,6 +403,7 @@ void Gen::visitMethodDef(MethodDecl* tree) {
 	//delete localEnv;
 }
 void Gen::visitVarDef(VariableDecl* tree) {
+	Pretty::debug("\nGen::visitVarDef:\n",tree,4);
 	VarSymbol* v= tree->sym;
 	code->newLocalVar(v);
 	//右值不为空，生成赋值语句
@@ -537,7 +547,22 @@ void Gen::visitApply(MethodInvocation* tree) {
 	genArgs(tree->args,((MethodType*)Check::symbol(tree->meth)->type)->argtypes);
 	result = m->invoke();
 }
+
+/**
+ * new A(123);
+ */
 void Gen::visitNewClass(NewClass* tree) {
+	//new 返回对象指针
+	code->emitop2(ByteCodes::new_,makeRef(tree->type));
+	//复制，作为构造函数参数
+	code->emitop0(ByteCodes::dup);
+	//生成参数
+	genArgs(tree->args,((MethodType*)tree->constructor)->argtypes);
+
+	//调用
+	items->makeMemberItem(tree->constructor,true)->invoke();
+	result = items->makeStackItem(tree->type);
+
 }
 void Gen::visitNewArray(NewArray* tree) {
 }
@@ -785,7 +810,7 @@ void Gen::visitIdent(Ident* tree) {
 		//构造方法调用
 		if(sym->kind == Kinds::MTH){
 			res->load();
-			res = items->makeMemberItem(sym);
+			res = items->makeMemberItem(sym,false);
 
 		}
 		result = res;
@@ -800,8 +825,9 @@ void Gen::visitIdent(Ident* tree) {
 		items->makeThisItem()->load();
 		/**
 		 * 是否要判断变量所在位置？在Attr阶段完成？
+		 * 暂时都当做非virtual
 		 */
-		result = items->makeMemberItem(sym);
+		result = items->makeMemberItem(sym,false);
 
 	}
 
@@ -809,8 +835,16 @@ void Gen::visitIdent(Ident* tree) {
 
 }
 void Gen::visitLiteral(Literal* tree) {
+	//null
+	if(tree->getTag() == TypeTags::BOT){
+		code->emitop0(ByteCodes::aconst_null);
+		result = items->makeStackItem(tree->type);
+	}else{
+		//其他立即数
+		result = items->makeImmediateItem((ConstType *)tree->type);
+		//genExpr()->load()  加载到栈中
 
-
+	}
 }
 
 

@@ -434,6 +434,8 @@ int Code::emitJump(int op) {
 void Code::emitop0(int op) {
 
 	emitop(op);
+	if(debug)
+		cout << endl;
 	if (!alive)
 		return;
 	//TOS，记录栈顶类型
@@ -840,11 +842,12 @@ Type* Code::typeForPool(void* cd) {
  * bipush ldc1
  */
 void Code::emitop1(int op, int od) {
-	if (util::debug) {
-		cout << " \tGen :\t " << ByteCodes::getCodeStr(op) << "\t " << od << endl;
-	}
 
 	emitop(op);
+	if (util::debug) {
+//		cout <<  "\t " << od << endl;
+		printf("%10d\n",od);
+	}
 	if (!alive)
 		return;
 	emit1(od);
@@ -867,9 +870,6 @@ void Code::emitop1(int op, int od) {
  * 最多两个字节，局部变量表最大65535
  */
 void Code::emitop1w(int op, int od) {
-	if (util::debug) {
-		cout << " \tGen :\t " << ByteCodes::getCodeStr(op) << " \t " << od << endl;
-	}
 	if (od > 0xFF) {
 		emitop(ByteCodes::wide);
 		emitop(op);
@@ -877,6 +877,10 @@ void Code::emitop1w(int op, int od) {
 	} else {
 		emitop(op);
 		emit1(od);
+	}
+	if (util::debug) {
+//		cout << "\t " << od << endl;
+		printf("%10d\n",od);
 	}
 	if (!alive)
 		return;
@@ -920,10 +924,6 @@ void Code::emitop1w(int op, int od) {
  * od2:第二操作数
  */
 void Code::emitop1w(int op, int od1, int od2) {
-	if (util::debug) {
-		cout << "\tGen :\t " << ByteCodes::getCodeStr(op) << "\t" << od1 << " , "
-				<< od2 << endl;
-	}
 	if (od1 > 0xFF || od2 < -128 || od2 > 127) {
 		emitop(ByteCodes::wide);
 		emitop(op);
@@ -933,6 +933,10 @@ void Code::emitop1w(int op, int od1, int od2) {
 		emitop(op);
 		emit1(od1);
 		emit1(od2);
+	}
+	if (util::debug) {
+//		cout << "\t" << od1 << " , " << od2 << endl ;
+		printf("%10d , %10d",od1,od2);
 	}
 	if (!alive)
 		return;
@@ -945,10 +949,11 @@ void Code::emitop1w(int op, int od1, int od2) {
 }
 
 void Code::emitop2(int op, int od) {
-	if (util::debug) {
-		cout << " \tGen :\t " << ByteCodes::getCodeStr(op) << "\t" << od << endl;
-	}
 	emitop(op);
+	if (util::debug) {
+		//cout <<" \t " << od << endl;
+		printf("%10d\n",od);
+	}
 	if (!alive)
 		return;
 	emit2(od);
@@ -1021,10 +1026,11 @@ void Code::emitop2(int op, int od) {
 	}
 }
 void Code::emitop4(int op, int od) {
-	if (util::debug) {
-		cout << " \tGen :\t " << ByteCodes::getCodeStr(op) << "\t" << od << endl;
-	}
 	emitop(op);
+	if (util::debug) {
+//		cout <<"\t" << od << endl;
+		printf("%10d\n",od);
+	}
 	if (!alive)
 		return;
 	emit4(od);
@@ -1059,7 +1065,8 @@ void Code::emit4(int od) {
 //输出一个操作码，可能有操作数，后续会生成
 void Code::emitop(int op) {
 	if (debug) {
-		cout << " \tGen :\t " << ByteCodes::getCodeStr(op) << endl;
+//		cout << " \tGen :\t " << ByteCodes::getCodeStr(op) ;
+		printf("\t%-10s", ByteCodes::getCodeStr(op).data());
 	}
 	if (pendingJumps != NULL)
 		resolvePending();

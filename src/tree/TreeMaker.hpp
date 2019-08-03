@@ -58,7 +58,8 @@ public :
 		return new Assign(pos,lhs,rhs);
 	}
 	static Statement*  makeAssignment(int pos,Symbol* s,Expression* rhs){
-			return makeExec(pos,makeAssign(pos,(makeIdent(pos,s)),rhs));
+			//type要设置，否则在访问到此赋值语句时无法确定type
+			return makeExec(pos,makeAssign(pos,(makeIdent(pos,s)),rhs)->setType(s->type));
 	}
 	static AssignOp* makeAssignOp(int pos,int opcode,Expression* lhs,Expression* rhs){
 		return new AssignOp(pos,opcode,lhs,rhs);
