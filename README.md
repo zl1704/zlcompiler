@@ -153,4 +153,18 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 		```
 	
 	
+	### 6 成员变量的赋值(常量)
+		
+		```
+		public int aa = 5;
+		
+		Gen::visitExec: 	aa = 5;
+    
+		Gen::visitAssign:	aa = 5
+			aload_0   			//需要将this加载到栈中，putfield才知道是谁的属性
+			iconst_5  
+			putfield           1
+		
+		```
+	
 
