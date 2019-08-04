@@ -399,12 +399,21 @@ void Code::emitInvokedynamic(int meth, MethodType* mtype) {
 
 }
 /**
+ * 静态绑定，根据所给类型调用方法
  * 包括实例初始化方法
  * 私有方法
- * 父类方法 :子类没有重写，在父类中
  */
 void Code::emitInvokespecial(int meth, MethodType* mtype) {
-
+	int argsize = width(mtype->argtypes);
+	emitop(ByteCodes::invokespecial);
+	if (!alive)
+		return;
+	if (debug) {
+		printf("%7d\n", meth);
+	}
+	emit2(meth);
+	state->pop(argsize + 1);
+	state->push(mtype->restype);
 
 }
 void Code::emitInvokestatic(int meth, MethodType* mtype) {
@@ -412,6 +421,7 @@ void Code::emitInvokestatic(int meth, MethodType* mtype) {
 }
 
 /**
+ * 动态调用
  * 根据对象的实际类型进行分派
  */
 void Code::emitInvokevirtual(int meth, MethodType* mtype) {
@@ -419,7 +429,12 @@ void Code::emitInvokevirtual(int meth, MethodType* mtype) {
 	emitop(ByteCodes::invokevirtual);
 	if(!alive)
 		return;
+	if (debug) {
+		printf("%7d\n", meth);
+	}
+
 	emit2(meth);
+
 	state->pop(argsize+1);
 	state->push(mtype->restype);
 }

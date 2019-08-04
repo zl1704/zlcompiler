@@ -557,10 +557,10 @@ void Gen::visitNewClass(NewClass* tree) {
 	//复制，作为构造函数参数
 	code->emitop0(ByteCodes::dup);
 	//生成参数
-	genArgs(tree->args,((MethodType*)tree->constructor)->argtypes);
+	genArgs(tree->args,((MethodType*)tree->constructor->type)->argtypes);
 
-	//调用
-	items->makeMemberItem(tree->constructor,true)->invoke();
+	//调用 构造方法，invokespecial
+	items->makeMemberItem(tree->constructor,false)->invoke();
 	result = items->makeStackItem(tree->type);
 
 }
@@ -810,7 +810,7 @@ void Gen::visitIdent(Ident* tree) {
 		//构造方法调用
 		if(sym->kind == Kinds::MTH){
 			res->load();
-			res = items->makeMemberItem(sym,false);
+			res = items->makeMemberItem(sym,false);//special
 
 		}
 		result = res;
@@ -825,9 +825,9 @@ void Gen::visitIdent(Ident* tree) {
 		items->makeThisItem()->load();
 		/**
 		 * 是否要判断变量所在位置？在Attr阶段完成？
-		 * 暂时都当做非virtual
+		 * private :invokespecial
 		 */
-		result = items->makeMemberItem(sym,false);
+		result = items->makeMemberItem(sym,(sym->flags_field &Flags::PRIVATE) ==0);
 
 	}
 

@@ -101,6 +101,9 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 		
 		JAVA中参数入栈由调用者维护，出栈由JVM维护， 实现方式为push return_address + jmp target（call）,  pop + jmp return_address(在_return指令中完成)
 		
+		invokespecial:静态绑定，包括实例初始化方法、私有方法
+		invokevirtual:动态调用, 根据对象的实际类型进行分派
+		
 	### 4. 循环 ，赋值 
 		
 		```
@@ -153,7 +156,7 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 		```
 	
 	
-	### 6 成员变量的赋值(常量)
+	### 6. 成员变量的赋值(常量)
 		
 		```
 		public int aa = 5;
@@ -166,5 +169,6 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 			putfield           1
 		
 		```
+	
 	
 

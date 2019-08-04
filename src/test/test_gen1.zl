@@ -1,20 +1,22 @@
 class A{
 
-	
 	public int aa = 5;
 	private double dd = 6.6;
-	A(int a){
-		this.a = aa;
-	}
 	
+	public A(){
+	}
 	public void fun(double a, double b){
-		A obj = new A(123);
+		fun();
 		int c = 6 ;
+		A obj = new A();
+		obj.fun(1,2);
 	}
 	
 	public int fun(int a,int b){
 		return a+b;
 	
 	}
+	
+	public void fun(){}
 
 }
