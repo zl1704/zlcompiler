@@ -233,6 +233,9 @@ public:
 	Item* makeStackItem(Type* type){
 		return stackItem[ByteCodes::typecode(type)];
 	}
+	IndexedItem* makeIndexItem(Type* type){
+		return new IndexedItem(type,code);
+	}
 
 	Item* makeThisItem(){
 		return thisItem;

@@ -16,6 +16,7 @@ class A{
 		A[][][] arrs = new A[2][3][4];
 		int[][][] arrs1 = new int[2][3][4];
 		int [] as = new int[10];
+		c = as[2]++;
 	}
 	
 	public int fun(int a,int b){

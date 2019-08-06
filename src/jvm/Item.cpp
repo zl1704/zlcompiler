@@ -108,7 +108,7 @@ Item* IndexedItem::load(){
 	return items->stackItem[typecode];
 }
 void  IndexedItem::store(){
-	code->emitop0(ByteCodes::istore + typecode);
+	code->emitop0(ByteCodes::iastore + typecode);
 }
 void  IndexedItem::duplicate(){
 	code->emitop0(ByteCodes::dup2);
@@ -116,6 +116,7 @@ void  IndexedItem::duplicate(){
 void  IndexedItem::drop(){
 	code->emitop0(ByteCodes::pop2);
 }
+//数组存储前调用，将数据复制到arr index下
 void IndexedItem::stash(int toscode){
 	 code->emitop0(ByteCodes::dup_x2 + 3 * (Code::width(toscode) - 1));
 }

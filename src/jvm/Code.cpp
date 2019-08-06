@@ -127,6 +127,17 @@ State* State::join(State* other) {
 	return this;
 }
 
+void State::print(){
+	if(debug){
+
+		printf("\t%s\n","state:");
+		for(int i = stacksize-1;i>=0;i--)
+			printf("\t \t%s\n",Type::typeName(stack[i]).data());
+		cout << endl;
+	}
+}
+
+
 /**
  * Code
  */
@@ -674,7 +685,12 @@ void Code::emitop0(int op) {
 		state->push(state->peek());
 		break;
 	case ByteCodes::dup2:
-		state->push(state->peek());
+		a = state->pop1();
+		b = state->pop1();
+		state->push(b);
+		state->push(a);
+		state->push(b);
+		state->push(a);
 		break;
 	case ByteCodes::dup_x1:
 		//before:  stack: ...,a,b

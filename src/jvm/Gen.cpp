@@ -632,6 +632,7 @@ void Gen::visitAssignop(AssignOp* tree) {
  */
 void Gen::visitUnary(Unary* tree) {
 	Pretty::debug("\nGen::visitUnary: \t",tree);
+
 	OperatorSymbol* opsym = (OperatorSymbol*)tree->sym;
 	MethodType* mt = (MethodType*)opsym->type;
 	if(tree->opcode == Tree::NOT){
@@ -674,7 +675,8 @@ void Gen::visitUnary(Unary* tree) {
 				if(item->typecode != ByteCodes::INTcode && (Code::truncate(item->typecode)))
 					code->emitop0(ByteCodes::int2byte + item->typecode - ByteCodes::BYTEcode);
 
-				item->store();
+				//item->store();
+				//这里是assign 后续会调用drop()
 				result = items->makeAssinItem(item);
 			}
 
@@ -695,8 +697,8 @@ void Gen::visitUnary(Unary* tree) {
 				//非int
 				// load() ,add ,store()
 				Item* res = item->load();
-
-				//
+//				code->state->print();
+				//数组运算会用，因为是后缀，x = a[i]++ ,先将a[i]复制到数组操作之下，以便数组+1操作完之后将原来a[i]赋值给x
 				item->stash(item->typecode);
 				code->emitop0(zero(item->typecode) + 1);
 				code->emitop0(opsym->opcode);
@@ -827,7 +829,14 @@ void Gen::visitTypeCast(TypeCast* tree) {
 void Gen::visitTypeTest(InstanceOf* tree) {
 }
 void Gen::visitIndexed(ArrayAccess* tree) {
+
+	genExpr(tree->indexed,tree->indexed->type)->load();
+	genExpr(tree->index,syms->intType)->load();
+	result = items->makeIndexItem(tree->type);
 }
+
+
+
 void Gen::visitSelect(FieldAccess* tree) {
 }
 

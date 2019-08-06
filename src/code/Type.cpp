@@ -18,6 +18,15 @@ Type* Type::elemtype(Type* t){
 	}
 }
 
+
+Type* Type::elemtypeOrType(Type* t){
+	Type* elemType = elemtype(t);
+	if(elemType != NULL)
+		return elemType;
+	return t;
+
+}
+
 string Type::typeName(Type* t){
 		switch(t->tag){
 			case TypeTags::STRING: return "String";

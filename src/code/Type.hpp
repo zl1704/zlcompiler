@@ -21,7 +21,7 @@ public:
 	static string typeName(Type* t);
 	static string typeName(int tag);
 	static Type* elemtype(Type* t);
-
+	static Type* elemtypeOrType(Type* t);
 	int tag;
 	TypeSymbol* tsym;
 	Type();

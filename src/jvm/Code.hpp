@@ -110,7 +110,8 @@ public:
 	//把栈顶转为父类t ...
 	void forceStackTop(Type* t);
 	State* join(State* other);
-
+	//debug
+	void print();
 };
 
 
