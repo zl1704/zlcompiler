@@ -186,6 +186,12 @@ public:
 	void emitInvokespecial(int meth,MethodType* mtype);
 	void emitInvokestatic(int meth,MethodType* mtype);
 	void emitInvokevirtual(int meth, MethodType* mtype);
+	void emitNewarray(int od, Type* type);
+	void emitAnewarray(int od, Type* type);
+	void emitMultianewarray(int ndims, int type, Type* arrayType);
+	static int arraycode(Type* type);
+
+
 	int emitJump(int op);
 	void emitop0(int op);
 	void emitop1(int op,int od);

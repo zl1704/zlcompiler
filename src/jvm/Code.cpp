@@ -393,6 +393,8 @@ void Code::markStatBegin() {
 
 /**
  * Emit code
+ * 特殊的单独写方法，需要pop push 具体的type
+ *
  */
 
 void Code::emitInvokedynamic(int meth, MethodType* mtype) {
@@ -438,6 +440,69 @@ void Code::emitInvokevirtual(int meth, MethodType* mtype) {
 	state->pop(argsize+1);
 	state->push(mtype->restype);
 }
+
+void Code::emitNewarray(int elemcode, Type* arrayType){
+
+	emitop(ByteCodes::newarray);
+	emit1(elemcode);
+	if (debug) {
+		printf("%10d\n", elemcode);
+	}
+	state->pop(1);
+	state->push(arrayType);
+
+}
+void Code::emitAnewarray(int od, Type* arrayType){
+	emitop(ByteCodes::anewarray);
+	emit2(od);
+	if (debug) {
+		printf("%9d\n", od);
+	}
+	state->pop(1);
+	state->push(arrayType);
+}
+void Code::emitMultianewarray(int ndims, int type, Type* arrayType){
+	emitop(ByteCodes::multianewarray);
+	emit2(type);
+	if (debug) {
+		printf("%6d\n", type);
+	}
+	state->pop(ndims);
+	state->push(arrayType);
+
+}
+//创建一维数据，基本类型code，根据JVM规范
+int Code::arraycode(Type* type){
+
+	switch(type->tag){
+
+	case TypeTags::BYTE:
+		return 8;
+	case TypeTags::BOOLEAN:
+		return 4;
+	case TypeTags::SHORT:
+		return 9;
+	case TypeTags::CHAR:
+		return 5;
+	case TypeTags::INT:
+		return 10;
+	case TypeTags::LONG:
+		return 11;
+	case TypeTags::FLOAT:
+		return 6;
+	case TypeTags::DOUBLE:
+		return 7;
+	case TypeTags::CLASS:
+		return 0;
+	case TypeTags::ARRAY:
+		return 1;
+
+	}
+
+	return -1;
+}
+
+
 int Code::emitJump(int op) {
 	//等待回填
 	emitop2(op, 0);

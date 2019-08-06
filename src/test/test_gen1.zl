@@ -9,7 +9,13 @@ class A{
 		fun();
 		int c = 6 ;
 		A obj = new A();
-		obj.fun(1,2);
+		
+		//obj.fun(1,2);
+		
+		
+		A[][][] arrs = new A[2][3][4];
+		int[][][] arrs1 = new int[2][3][4];
+		int [] as = new int[10];
 	}
 	
 	public int fun(int a,int b){

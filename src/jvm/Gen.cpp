@@ -565,6 +565,35 @@ void Gen::visitNewClass(NewClass* tree) {
 
 }
 void Gen::visitNewArray(NewArray* tree) {
+	if(tree->elems.size()!=0){
+		//int a[] = {}
+
+	}else{
+		//gen dims
+		vector<Expression* > _dims = tree->dims;
+		for(int i = 0;i<_dims.size();i++){
+			genExpr(_dims[i],syms->intType)->load();
+		}
+		// new
+		//去掉一层数组
+		int dims = tree->dims.size();
+		Type* elemType = Type::elemtype(tree->type);
+		int elemcode = Code::arraycode(elemType);
+		//A[]
+		if(elemcode == 0 ||(elemcode == 1 && dims == 1)){
+
+			code->emitAnewarray(makeRef(elemType),tree->type);
+		}else if(elemcode == 1){
+			//多维
+			code->emitMultianewarray(dims,makeRef(elemType),tree->type);
+		}else{
+			//基本类型
+			code->emitNewarray(elemcode, tree->type);
+
+		}
+
+	}
+		result = items->makeStackItem(tree->type);
 }
 void Gen::visitParens(Parens* tree) {
 	result = genExpr(tree->expr,tree->expr->type);
