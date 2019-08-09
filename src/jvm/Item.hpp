@@ -131,8 +131,10 @@ public:
 class MemberItem :public Item{
 public:
 	Symbol* member;
-	MemberItem(Symbol* member,Code* code):Item(ByteCodes::typecode(member->type),code){
+	bool _virtual;
+	MemberItem(Symbol* member,Code* code,bool _virtual):Item(ByteCodes::typecode(member->type),code){
 		this->member = member;
+		this->_virtual = _virtual;
 	}
 	virtual Item* load();
 	virtual void  store();
@@ -231,6 +233,9 @@ public:
 	Item* makeStackItem(Type* type){
 		return stackItem[ByteCodes::typecode(type)];
 	}
+	IndexedItem* makeIndexItem(Type* type){
+		return new IndexedItem(type,code);
+	}
 
 	Item* makeThisItem(){
 		return thisItem;
@@ -247,8 +252,8 @@ public:
 		return new StaticItem(member,code);
 	}
 
-	MemberItem* makeMemberItem(Symbol* s){
-		return new MemberItem(s,code);
+	MemberItem* makeMemberItem(Symbol* s,bool _virtual ){
+		return new MemberItem(s,code,_virtual);
 	}
 
 	ImmediateItem* makeImmediateItem(ConstType* type){

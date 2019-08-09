@@ -74,7 +74,7 @@ void Gen::genArgs(vector<Expression*> trees, vector<Type*> ts){
  * 生成条件表达项，返回值为true,false
  */
 CondItem* Gen::genCond(Tree* tree){
-	Pretty::debug("Gen::genCond: \t",tree);
+	Pretty::debug("\nGen::genCond: \t",tree);
 	Tree* innerTree = Check::skipParens(tree);
 	if(innerTree->getTag() == Tree::CONDEXPR){
 		// (cond)?(1):(2)
@@ -196,7 +196,7 @@ void Gen::genLoop(Statement* loop, Statement* body, Expression* cond,
  */
 void Gen::genMethod(MethodDecl* md,Env<GenContext*>* env){
 	if(debug)
-		cout << "Gen::genMethod:\t "<<md->name<<endl;
+		cout << "\nGen::genMethod:\t "<<md->name<<endl;
 	int startpc = initCode(md,env);
 	genStat(md->body,env);
 	if(code->isAlive()){
@@ -287,12 +287,14 @@ vector<Tree*> Gen::fillInitDefs(vector<Tree*> defs,ClassSymbol* csym){
 				//实例变量总是要初始化
 				if((vsym->flags_field&Flags::STATIC)==0){
 					Statement* init = TreeMaker::makeAssignment(vdef->pos,vsym,vdef->init);
+					init->type = vsym->type;
 					initCode.push_back(init);
 //					cout << "init code size :" << initCode.size()<<endl;
 				}else if(!vsym->type->isConst()){
 					//非静态编译期常量
 					Statement* init = TreeMaker::makeAssignment(vdef->pos, vsym,
 							vdef->init);
+					init->type = vsym->type;
 					cinitCode.push_back(init);
 
 				}
@@ -364,16 +366,34 @@ void Gen::fillMethod(MethodDecl* md ,vector<Statement*> initCode){
 }
 
 
+int Gen::zero(int tc){
 
+	switch (tc) {
+	case ByteCodes::INTcode:
+	case ByteCodes::BYTEcode:
+	case ByteCodes::SHORTcode:
+	case ByteCodes::CHARcode:
+		return ByteCodes::iconst_0;
+	case ByteCodes::LONGcode:
+		return ByteCodes::lconst_0;
+	case ByteCodes::FLOATcode:
+		return ByteCodes::fconst_0;
+	case ByteCodes::DOUBLEcode:
+		return ByteCodes::dconst_0;
+	default:
+		return -1;
+	}
+}
+//间接项
+int Gen::makeRef(Type* type){
+	if (type->tag == TypeTags::CLASS)
+		return pool->put(type->tsym, Pool::POOL_SYM);
+	return pool->put(type, Pool::POOL_TYPE);
 
-void Gen::visitTopLevel(CompilationUnit* tree) {
 }
 
 
 
-void Gen::visitClassDef(ClassDecl* tree) {
-
-}
 
 void Gen::visitMethodDef(MethodDecl* tree) {
 	Env<GenContext*> * localEnv = env->dup(tree);
@@ -383,6 +403,7 @@ void Gen::visitMethodDef(MethodDecl* tree) {
 	//delete localEnv;
 }
 void Gen::visitVarDef(VariableDecl* tree) {
+	Pretty::debug("\nGen::visitVarDef:\n",tree,4);
 	VarSymbol* v= tree->sym;
 	code->newLocalVar(v);
 	//右值不为空，生成赋值语句
@@ -391,8 +412,7 @@ void Gen::visitVarDef(VariableDecl* tree) {
 		items->makeLocalItem(v)->store();
 	}
 }
-void Gen::visitSkip(Skip* tree) {
-}
+
 void Gen::visitBlock(Block* tree) {
 	int limit = code->nextreg;
 	Env<GenContext*>* localEnv = env->dup(tree);
@@ -413,11 +433,12 @@ void Gen::visitDoLoop(DoWhileLoop* tree) {
 	genLoop(tree,tree->body,tree->cond,step,false);
 }
 void Gen::visitWhileLoop(WhileLoop* tree) {
-	Pretty::debug("Gen::visitWhileLoop:\n",tree);
+	Pretty::debug("\nGen::visitWhileLoop:\n",tree,4);
 	vector<ExpressionStatement*> step;
 	genLoop(tree,tree->body,tree->cond,step,true);
 }
 void Gen::visitForLoop(ForLoop* tree) {
+	Pretty::debug("\nGen::visitForLoop:\n",tree,4);
 	int limit = code->nextreg;
 	genStats(tree->init,env);
 	genLoop(tree,tree->body,tree->cond,tree->step,true);
@@ -435,7 +456,7 @@ void Gen::visitCase(Case* tree) {
  */
 void Gen::visitConditional(Conditional* tree) {
 
-	Pretty::debug("Gen::visitConditional :\t",tree);
+	Pretty::debug("\nGen::visitConditional :\t",tree,4);
 	CondItem* cond = genCond(tree->cond);
 	Chain* elseChain = cond->jumpFalse();
 	//表达式出口
@@ -457,7 +478,36 @@ void Gen::visitConditional(Conditional* tree) {
 	code->resolve(thenExit);
 	result = items->makeStackItem(pt);
 }
+
+/**
+ * if(cond){
+ * 		then
+ * 		goto exit;
+ * }else{
+ *
+ *
+ *
+ * }
+ */
 void Gen::visitIf(If* tree) {
+	Pretty::debug("\nGen::visitIf:\n",tree,4);
+	Chain* thenExit = NULL;
+	int limit = code->nextreg;
+	CondItem* cond = genCond(tree->cond);
+	Chain* elseChain = cond->jumpFalse();
+	if(!cond->isFalse()){
+		code->resolve(cond->trueJumps);
+		genStat(tree->thenpart,env);
+		thenExit = code->branch(ByteCodes::goto_);
+	}
+
+	if(elseChain!=NULL){
+		code->resolve(elseChain);
+		if(tree->elsepart!=NULL)
+			genStat(tree->elsepart,env);
+	}
+	code->resolve(thenExit);
+	code->endScopes(limit);
 }
 void Gen::visitExec(ExpressionStatement* tree) {
 	Pretty::debug("\nGen::visitExec: \t",tree);
@@ -471,7 +521,9 @@ void Gen::visitExec(ExpressionStatement* tree) {
 		break;
 
 	}
-
+	/*
+	 * Assign::drop:执行 lhs.store();
+	 */
 	genExpr(tree->expr,tree->expr->type)->drop();
 }
 void Gen::visitBreak(Break* tree) {
@@ -481,24 +533,197 @@ void Gen::visitContinue(Continue* tree) {
 	env->info->addCont(code->branch(ByteCodes::goto_));
 }
 void Gen::visitReturn(Return* tree) {
+	//有返回值
+	if(tree->expr!= NULL){
+		genExpr(tree->expr,tree->expr->type)->load();
+		code->emitop0(ByteCodes::ireturn + Code::truncate(ByteCodes::typecode(tree->expr->type)));
+	}else{
+		code->emitop0(ByteCodes::return_);
+	}
 }
 void Gen::visitApply(MethodInvocation* tree) {
-	Pretty::debug("Gen::visitApply:\t",tree);
+	Pretty::debug("\nGen::visitApply:\t",tree,4);
 	Item* m = genExpr(tree->meth,methodType);
 	genArgs(tree->args,((MethodType*)Check::symbol(tree->meth)->type)->argtypes);
 	result = m->invoke();
 }
+
+/**
+ * new A(123);
+ */
 void Gen::visitNewClass(NewClass* tree) {
+	//new 返回对象指针
+	code->emitop2(ByteCodes::new_,makeRef(tree->type));
+	//复制，作为构造函数参数
+	code->emitop0(ByteCodes::dup);
+	//生成参数
+	genArgs(tree->args,((MethodType*)tree->constructor->type)->argtypes);
+
+	//调用 构造方法，invokespecial
+	items->makeMemberItem(tree->constructor,false)->invoke();
+	result = items->makeStackItem(tree->type);
+
 }
 void Gen::visitNewArray(NewArray* tree) {
+	if(tree->elems.size()!=0){
+		//int a[] = {}
+
+	}else{
+		//gen dims
+		vector<Expression* > _dims = tree->dims;
+		for(int i = 0;i<_dims.size();i++){
+			genExpr(_dims[i],syms->intType)->load();
+		}
+		// new
+		//去掉一层数组
+		int dims = tree->dims.size();
+		Type* elemType = Type::elemtype(tree->type);
+		int elemcode = Code::arraycode(elemType);
+		//A[]
+		if(elemcode == 0 ||(elemcode == 1 && dims == 1)){
+
+			code->emitAnewarray(makeRef(elemType),tree->type);
+		}else if(elemcode == 1){
+			//多维
+			code->emitMultianewarray(dims,makeRef(elemType),tree->type);
+		}else{
+			//基本类型
+			code->emitNewarray(elemcode, tree->type);
+
+		}
+
+	}
+		result = items->makeStackItem(tree->type);
 }
 void Gen::visitParens(Parens* tree) {
+	result = genExpr(tree->expr,tree->expr->type);
 }
 void Gen::visitAssign(Assign* tree) {
+	Pretty::debug("\nGen::visitAssign:\t",tree,4);
+	Item* l = genExpr(tree->lhs,tree->lhs->type);
+	genExpr(tree->rhs,tree->rhs->type)->load();
+	result = items->makeAssinItem(l);
+	//由Exec store
+
 }
+/**
+ * ===>  a = a + b;
+ */
 void Gen::visitAssignop(AssignOp* tree) {
+	OperatorSymbol* opsym = (OperatorSymbol*)tree->opsym;
+	Item* l ;
+	if(opsym->opcode == ByteCodes::string_add){
+
+	}else{
+		l = genExpr(tree->lhs,tree->lhs->type);
+		l->load();
+		//复制一个与右操作数运算
+		//????
+		l->duplicate();
+		l->coerce(((MethodType*)opsym->type)->argtypes[0])->load();
+		//完成二元操作
+		completeBinop(tree->lhs,tree->rhs,opsym)->coerce(tree->lhs->type);
+	}
+	result = items->makeAssinItem(l);
 }
+
+/**
+ * 主要是 ++x ,x++运算
+ */
 void Gen::visitUnary(Unary* tree) {
+	Pretty::debug("\nGen::visitUnary: \t",tree);
+
+	OperatorSymbol* opsym = (OperatorSymbol*)tree->sym;
+	MethodType* mt = (MethodType*)opsym->type;
+	if(tree->opcode == Tree::NOT){
+		// ! 逻辑运算
+		CondItem*  cond = genCond(tree->arg);
+		result = cond->negate();
+	}else{
+		//算数运算
+		Item* item = genExpr(tree->arg,mt->argtypes[0]);
+
+		if(tree->getTag() == Tree::NEG){
+			result = item->load();
+			code->emitop0(opsym->opcode);
+		}else if(tree->getTag() == Tree::COMPL){
+			result = item->load();
+			//! 转成  ===>  -1 异或 od
+			if(item->typecode == ByteCodes::LONGcode){
+				items->makeImmediateItem(ConstType::create(TypeTags::LONG,"-1"))->load();
+			}else{
+				code->emitop0(ByteCodes::iconst_m1);
+			}
+			code->emitop0(opsym->opcode);
+		}else if(tree->getTag() == Tree::PREINC||tree->getTag() == Tree::PREDEC){
+			item->duplicate();
+			//int类型自增  通过iinc指令,直接给局部变量int +1
+			if (dynamic_cast<LocalItem*>(item)
+					&& (opsym->opcode == ByteCodes::iadd
+							|| opsym->opcode == ByteCodes::isub)) {
+				((LocalItem*)item)->incr(tree->getTag() == Tree::PREINC? 1 :-1);
+				result = item;
+				//后面通过load()来使用
+			}else{
+				//非int
+				// load() ,add ,store()
+				item->load();
+				code->emitop0(zero(item->typecode)+1);
+				code->emitop0(opsym->opcode);
+
+				//char byte short 需要转型
+				if(item->typecode != ByteCodes::INTcode && (Code::truncate(item->typecode)))
+					code->emitop0(ByteCodes::int2byte + item->typecode - ByteCodes::BYTEcode);
+
+				//item->store();
+				//这里是assign 后续会调用drop()
+				result = items->makeAssinItem(item);
+			}
+
+
+
+		}else if(tree->getTag() == Tree::POSTINC||tree->getTag() == Tree::POSTDEC){
+			item->duplicate();
+			//后缀运算 x++, 先将x load()到栈中
+			if (dynamic_cast<LocalItem*>(item)
+					&& (opsym->opcode == ByteCodes::iadd
+							|| opsym->opcode == ByteCodes::isub)) {
+				Item* res = item->load();
+				((LocalItem*) item)->incr(
+						tree->getTag() == Tree::POSTINC ? 1 : -1);
+				result = res;
+				//后面通过load()来使用
+			} else {
+				//非int
+				// load() ,add ,store()
+				Item* res = item->load();
+//				code->state->print();
+				//数组运算会用，因为是后缀，x = a[i]++ ,先将a[i]复制到数组操作之下，以便数组+1操作完之后将原来a[i]赋值给x
+				item->stash(item->typecode);
+				code->emitop0(zero(item->typecode) + 1);
+				code->emitop0(opsym->opcode);
+
+				//char byte short 需要转型
+				if (item->typecode != ByteCodes::INTcode
+						&& (Code::truncate(item->typecode)))
+					code->emitop0(
+							ByteCodes::int2byte + item->typecode
+									- ByteCodes::BYTEcode);
+
+				item->store();
+				result =res;
+			}
+
+		}else if(tree->getTag() == Tree::NULLCHK){
+
+		}else{
+
+			cout << "Gen::visitUnary :未定义的一元操作" << endl;
+		}
+
+	}
+
+
 }
 
 void Gen::visitBinary(Binary* tree) {
@@ -590,6 +815,7 @@ Item*  Gen::completeBinop(Tree* lhs,Tree* rhs,OperatorSymbol* opsym){
 			|| opcode == ByteCodes::if_acmp_nonnull) {
 		return items->makeCondItem(opcode, NULL, NULL);
 	} else {
+		//运算结果在栈顶
 		code->emitop0(opcode);
 		return items->makeStackItem(mt->restype);
 
@@ -603,7 +829,14 @@ void Gen::visitTypeCast(TypeCast* tree) {
 void Gen::visitTypeTest(InstanceOf* tree) {
 }
 void Gen::visitIndexed(ArrayAccess* tree) {
+
+	genExpr(tree->indexed,tree->indexed->type)->load();
+	genExpr(tree->index,syms->intType)->load();
+	result = items->makeIndexItem(tree->type);
 }
+
+
+
 void Gen::visitSelect(FieldAccess* tree) {
 }
 
@@ -615,7 +848,7 @@ void Gen::visitIdent(Ident* tree) {
 		//构造方法调用
 		if(sym->kind == Kinds::MTH){
 			res->load();
-			res = items->makeMemberItem(sym);
+			res = items->makeMemberItem(sym,false);//special
 
 		}
 		result = res;
@@ -630,8 +863,9 @@ void Gen::visitIdent(Ident* tree) {
 		items->makeThisItem()->load();
 		/**
 		 * 是否要判断变量所在位置？在Attr阶段完成？
+		 * private :invokespecial
 		 */
-		result = items->makeMemberItem(sym);
+		result = items->makeMemberItem(sym,(sym->flags_field &Flags::PRIVATE) ==0);
 
 	}
 
@@ -639,16 +873,47 @@ void Gen::visitIdent(Ident* tree) {
 
 }
 void Gen::visitLiteral(Literal* tree) {
+	//null
+	if(tree->getTag() == TypeTags::BOT){
+		code->emitop0(ByteCodes::aconst_null);
+		result = items->makeStackItem(tree->type);
+	}else{
+		//其他立即数
+		result = items->makeImmediateItem((ConstType *)tree->type);
+		//genExpr()->load()  加载到栈中
+
+	}
+}
+
+
+
+
+
+/**
+ * not used
+ */
+
+
+void Gen::visitTree(Tree* tree) {
+}
+
+void Gen::visitSkip(Skip* tree) {
+}
+void Gen::visitTopLevel(CompilationUnit* tree) {
+}
+
+
+
+void Gen::visitClassDef(ClassDecl* tree) {
+
 }
 void Gen::visitTypeIdent(PrimitiveTypeTree* tree) {
 }
 void Gen::visitTypeArray(ArrayTypeTree* tree) {
 }
+
 void Gen::visitModifiers(Modifiers* tree) {
 }
-void Gen::visitTree(Tree* tree) {
-}
-
 
 /**
  * GenContext

@@ -108,7 +108,7 @@ Item* IndexedItem::load(){
 	return items->stackItem[typecode];
 }
 void  IndexedItem::store(){
-	code->emitop0(ByteCodes::istore + typecode);
+	code->emitop0(ByteCodes::iastore + typecode);
 }
 void  IndexedItem::duplicate(){
 	code->emitop0(ByteCodes::dup2);
@@ -116,6 +116,7 @@ void  IndexedItem::duplicate(){
 void  IndexedItem::drop(){
 	code->emitop0(ByteCodes::pop2);
 }
+//数组存储前调用，将数据复制到arr index下
 void IndexedItem::stash(int toscode){
 	 code->emitop0(ByteCodes::dup_x2 + 3 * (Code::width(toscode) - 1));
 }
@@ -213,8 +214,10 @@ Item* MemberItem::invoke() {
 	//方法调用
 	MethodType* mt = (MethodType*) member->type;
 	int rescode = ByteCodes::typecode(mt->restype);
-	//没有接口和继承，全部special调用
-	code->emitInvokevirtual(code->pool->put(member), mt);
+	if(_virtual)
+		code->emitInvokevirtual(code->pool->put(member), mt);
+	else
+		code->emitInvokespecial(code->pool->put(member), mt);
 	return items->stackItem[rescode];
 }
 void  MemberItem::duplicate(){
@@ -326,19 +329,19 @@ Item* ImmediateItem::coerce(int targetcode) {
 				ConstType::create(TypeTags::LONG, ctype->str));
 	case ByteCodes::DOUBLEcode:
 		return items->makeImmediateItem(
-				ConstType::create(TypeTags::LONG, ctype->str));
+				ConstType::create(TypeTags::DOUBLE, ctype->str));
 	case ByteCodes::FLOATcode:
 		return items->makeImmediateItem(
-				ConstType::create(TypeTags::LONG, ctype->str));
+				ConstType::create(TypeTags::FLOAT, ctype->str));
 	case ByteCodes::CHARcode:
 		return items->makeImmediateItem(
-				ConstType::create(TypeTags::LONG, ctype->str));
+				ConstType::create(TypeTags::CHAR, ctype->str));
 	case ByteCodes::SHORTcode:
 		return items->makeImmediateItem(
-				ConstType::create(TypeTags::LONG, ctype->str));
+				ConstType::create(TypeTags::SHORT, ctype->str));
 	case ByteCodes::BYTEcode:
 		return items->makeImmediateItem(
-				ConstType::create(TypeTags::LONG, ctype->str));
+				ConstType::create(TypeTags::BYTE, ctype->str));
 	default:
 		return Item::coerce(targetcode);
 

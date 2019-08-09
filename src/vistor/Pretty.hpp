@@ -19,7 +19,7 @@ public:
 	int width;
 	static Pretty* instance();
 	static void debug(string msg,Tree* tree);
-
+	static void debug(string msg,Tree* tree,int margin);
 	Pretty();
 	virtual ~Pretty();
 	/***
@@ -118,9 +118,10 @@ private:
 	}
 
 	void printConst(int type,string val);
-	inline void align(){
-	        for (int i = 0; i < lmargin; i++)cout <<" ";
-	    }
+	inline void align() {
+		for (int i = 0; i < lmargin; i++)
+			cout << " ";
+	}
 	void printBaseElementType(Tree* tree);
 	Tree* innermostType(Tree* tree);
 };

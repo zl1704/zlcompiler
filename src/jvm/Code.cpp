@@ -127,6 +127,17 @@ State* State::join(State* other) {
 	return this;
 }
 
+void State::print(){
+	if(debug){
+
+		printf("\t%s\n","state:");
+		for(int i = stacksize-1;i>=0;i--)
+			printf("\t \t%s\n",Type::typeName(stack[i]).data());
+		cout << endl;
+	}
+}
+
+
 /**
  * Code
  */
@@ -393,18 +404,29 @@ void Code::markStatBegin() {
 
 /**
  * Emit code
+ * 特殊的单独写方法，需要pop push 具体的type
+ *
  */
 
 void Code::emitInvokedynamic(int meth, MethodType* mtype) {
 
 }
 /**
+ * 静态绑定，根据所给类型调用方法
  * 包括实例初始化方法
  * 私有方法
- * 父类方法 :子类没有重写，在父类中
  */
 void Code::emitInvokespecial(int meth, MethodType* mtype) {
-
+	int argsize = width(mtype->argtypes);
+	emitop(ByteCodes::invokespecial);
+	if (!alive)
+		return;
+	if (debug) {
+		printf("%7d\n", meth);
+	}
+	emit2(meth);
+	state->pop(argsize + 1);
+	state->push(mtype->restype);
 
 }
 void Code::emitInvokestatic(int meth, MethodType* mtype) {
@@ -412,6 +434,7 @@ void Code::emitInvokestatic(int meth, MethodType* mtype) {
 }
 
 /**
+ * 动态调用
  * 根据对象的实际类型进行分派
  */
 void Code::emitInvokevirtual(int meth, MethodType* mtype) {
@@ -419,10 +442,78 @@ void Code::emitInvokevirtual(int meth, MethodType* mtype) {
 	emitop(ByteCodes::invokevirtual);
 	if(!alive)
 		return;
+	if (debug) {
+		printf("%7d\n", meth);
+	}
+
 	emit2(meth);
+
 	state->pop(argsize+1);
 	state->push(mtype->restype);
 }
+
+void Code::emitNewarray(int elemcode, Type* arrayType){
+
+	emitop(ByteCodes::newarray);
+	emit1(elemcode);
+	if (debug) {
+		printf("%10d\n", elemcode);
+	}
+	state->pop(1);
+	state->push(arrayType);
+
+}
+void Code::emitAnewarray(int od, Type* arrayType){
+	emitop(ByteCodes::anewarray);
+	emit2(od);
+	if (debug) {
+		printf("%9d\n", od);
+	}
+	state->pop(1);
+	state->push(arrayType);
+}
+void Code::emitMultianewarray(int ndims, int type, Type* arrayType){
+	emitop(ByteCodes::multianewarray);
+	emit2(type);
+	if (debug) {
+		printf("%6d\n", type);
+	}
+	state->pop(ndims);
+	state->push(arrayType);
+
+}
+//创建一维数据，基本类型code，根据JVM规范
+int Code::arraycode(Type* type){
+
+	switch(type->tag){
+
+	case TypeTags::BYTE:
+		return 8;
+	case TypeTags::BOOLEAN:
+		return 4;
+	case TypeTags::SHORT:
+		return 9;
+	case TypeTags::CHAR:
+		return 5;
+	case TypeTags::INT:
+		return 10;
+	case TypeTags::LONG:
+		return 11;
+	case TypeTags::FLOAT:
+		return 6;
+	case TypeTags::DOUBLE:
+		return 7;
+	case TypeTags::CLASS:
+		return 0;
+	case TypeTags::ARRAY:
+		return 1;
+
+	}
+
+	return -1;
+}
+
+
 int Code::emitJump(int op) {
 	//等待回填
 	emitop2(op, 0);
@@ -432,10 +523,10 @@ int Code::emitJump(int op) {
  * 输出一个无操作数的操作码,并管理栈中状态(TOS)
  */
 void Code::emitop0(int op) {
-	if (debug) {
-		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << endl;
-	}
+
 	emitop(op);
+	if(debug)
+		cout << endl;
 	if (!alive)
 		return;
 	//TOS，记录栈顶类型
@@ -594,7 +685,12 @@ void Code::emitop0(int op) {
 		state->push(state->peek());
 		break;
 	case ByteCodes::dup2:
-		state->push(state->peek());
+		a = state->pop1();
+		b = state->pop1();
+		state->push(b);
+		state->push(a);
+		state->push(b);
+		state->push(a);
 		break;
 	case ByteCodes::dup_x1:
 		//before:  stack: ...,a,b
@@ -842,11 +938,12 @@ Type* Code::typeForPool(void* cd) {
  * bipush ldc1
  */
 void Code::emitop1(int op, int od) {
-	if (util::debug) {
-		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << "\t " << od << endl;
-	}
 
 	emitop(op);
+	if (util::debug) {
+//		cout <<  "\t " << od << endl;
+		printf("%10d\n",od);
+	}
 	if (!alive)
 		return;
 	emit1(od);
@@ -869,9 +966,6 @@ void Code::emitop1(int op, int od) {
  * 最多两个字节，局部变量表最大65535
  */
 void Code::emitop1w(int op, int od) {
-	if (util::debug) {
-		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << " \t " << od << endl;
-	}
 	if (od > 0xFF) {
 		emitop(ByteCodes::wide);
 		emitop(op);
@@ -879,6 +973,10 @@ void Code::emitop1w(int op, int od) {
 	} else {
 		emitop(op);
 		emit1(od);
+	}
+	if (util::debug) {
+//		cout << "\t " << od << endl;
+		printf("%10d\n",od);
 	}
 	if (!alive)
 		return;
@@ -922,10 +1020,6 @@ void Code::emitop1w(int op, int od) {
  * od2:第二操作数
  */
 void Code::emitop1w(int op, int od1, int od2) {
-	if (util::debug) {
-		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << "\t" << od1 << " , "
-				<< od2 << endl;
-	}
 	if (od1 > 0xFF || od2 < -128 || od2 > 127) {
 		emitop(ByteCodes::wide);
 		emitop(op);
@@ -935,6 +1029,10 @@ void Code::emitop1w(int op, int od1, int od2) {
 		emitop(op);
 		emit1(od1);
 		emit1(od2);
+	}
+	if (util::debug) {
+//		cout << "\t" << od1 << " , " << od2 << endl ;
+		printf("%10d , %10d",od1,od2);
 	}
 	if (!alive)
 		return;
@@ -947,10 +1045,11 @@ void Code::emitop1w(int op, int od1, int od2) {
 }
 
 void Code::emitop2(int op, int od) {
-	if (util::debug) {
-		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << "\t" << od << endl;
-	}
 	emitop(op);
+	if (util::debug) {
+		//cout <<" \t " << od << endl;
+		printf("%10d\n",od);
+	}
 	if (!alive)
 		return;
 	emit2(od);
@@ -1023,10 +1122,11 @@ void Code::emitop2(int op, int od) {
 	}
 }
 void Code::emitop4(int op, int od) {
-	if (util::debug) {
-		cout << "Gen :\t " << ByteCodes::getCodeStr(op) << "\t" << od << endl;
-	}
 	emitop(op);
+	if (util::debug) {
+//		cout <<"\t" << od << endl;
+		printf("%10d\n",od);
+	}
 	if (!alive)
 		return;
 	emit4(od);
@@ -1060,6 +1160,10 @@ void Code::emit4(int od) {
 }
 //输出一个操作码，可能有操作数，后续会生成
 void Code::emitop(int op) {
+	if (debug) {
+//		cout << " \tGen :\t " << ByteCodes::getCodeStr(op) ;
+		printf("\t%-10s", ByteCodes::getCodeStr(op).data());
+	}
 	if (pendingJumps != NULL)
 		resolvePending();
 	if (alive) {

@@ -25,6 +25,10 @@ public:
 	virtual int getTag() {
 		return ASSIGN;
 	}
+	Assign* setType(Type* type){
+		this->type = type;
+		return this;
+	}
 	virtual ~Assign();
 };
 

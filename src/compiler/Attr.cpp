@@ -254,7 +254,9 @@ Symbol* Attr::findType(Env<AttrContext*>* env, string name) {
  * 标注 二元操作符类型，决定表达式类型
  */
 Symbol* Attr::resolveBinaryOperator(int pos, Env<AttrContext*>* env, int optag,
-		Type* left, Type* right) {
+		Type* tleft, Type* tright) {
+	Type* left = Type::elemtypeOrType(tleft);
+	Type* right = Type::elemtypeOrType(tright);
 	if(util::debug){
 		cout<< "寻找二元操作: " + Type::typeName(left) + "  "
 						+ TreeInfo::operatorName(optag) + "   "
@@ -321,7 +323,8 @@ Symbol* Attr::resolveBinaryOperator(int pos, Env<AttrContext*>* env, int optag,
  * 标注一元操作
  */
 Symbol* Attr::resolveUnaryOperator(int pos, int optag, Env<AttrContext*>* env,
-		Type* argtype) {
+		Type* type) {
+	Type* argtype = Type::elemtypeOrType(type);
 	if(util::debug){
 		cout
 				<< "寻找一元操作: " + Type::typeName(argtype) + "  "
@@ -774,13 +777,13 @@ void Attr::visitTypeCast(TypeCast* tree) {
 void Attr::visitTypeTest(InstanceOf* tree) {
 }
 void Attr::visitIndexed(ArrayAccess* tree) {
-	Type* t;
+	Type* argtype = attribExpr(tree->indexed,env,Type::noType);
 	//a[]   a的类型
-	Type* owntype =  attribExpr(tree->indexed,env,Type::noType);
+	Type* owntype;
 	//[] 中必须是int
 	attribExpr(tree->index,env,syms->intType);
-	if(owntype->tag == TypeTags::ARRAY)
-		t = ((ArrayType*) owntype)->elemtype;
+	if(argtype->tag == TypeTags::ARRAY)
+		owntype = ((ArrayType*) argtype)->elemtype;
 	else
 		log->report(tree->indexed->pos,Log::ERROR_Attr,"必须为数组,但找到 "+Type::typeName(owntype));
 

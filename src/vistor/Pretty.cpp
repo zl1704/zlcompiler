@@ -24,13 +24,20 @@ Pretty* Pretty::instance() {
 	}
 	return pretty;
 }
-void Pretty::debug(string msg,Tree* tree){
-	if(util::debug){
+void Pretty::debug(string msg,Tree* tree,int margin){
+	if (util::debug) {
+		for (int i = 0; i < margin; i++)
+					cout << " ";
 		cout << msg;
 		tree->accept(instance());
 		cout << endl;
+
+
 	}
 
+}
+void Pretty::debug(string msg,Tree* tree){
+	debug(msg,tree,0);
 }
 
 

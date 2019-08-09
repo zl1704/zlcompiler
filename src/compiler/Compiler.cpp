@@ -65,6 +65,8 @@ void Compiler::compile2(){
 }
 
 void Compiler::generate(Env<AttrContext* >* env){
+	if(log->getErrNums()>0)
+			return ;
 	Pretty* pretty =Pretty::instance();
 	ClassDecl* cdef = env->enclClass;
 	pretty->visitClassDef(cdef);

@@ -15,7 +15,7 @@
 //	string fileName("E:/workspace/c++/zlcompiler/src/test/test.zl");
 //	string fileName("E:/workspace/c++/zlcompiler/src/test/test_syntax.zl");
 //	string fileName("E:/workspace/c++/zlcompiler/src/test/test_pretty.zl");
-	string fileName("E:/workspace/c++/zlcompiler/src/test/test_gen_conditional.zl");
+	string fileName("E:/workspace/c++/zlcompiler/src/test/test_gen1.zl");
 //	if(argc <2){
 //		cout<<"没有输入文件";
 //		return 0;
