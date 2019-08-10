@@ -76,7 +76,8 @@ vector<Type*> Attr::attribArgs(vector<Expression*> trees,
 
 template<class T>
 Type* Attr::attribStats(vector<T> trees, Env<AttrContext*>* env) {
-	for (int i = 0; i < trees.size(); i++)
+    int size = trees.size();
+	for (int i = 0; i < size; i++)
 		attribStat(trees.at(i), env);
 }
 Type* Attr::attribStat(Tree* tree, Env<AttrContext*>* env) {

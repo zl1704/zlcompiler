@@ -253,7 +253,7 @@ bool ImmediateItem::isPosZero(jfloat x){
 	 return x == 0.0f && 1.0f / x > 0.0f;
 }
 bool ImmediateItem::isPosZero(jdouble x){
-	return x == 0.0d && 1.0d / x > 0.0d;
+	return x == 0.0 && 1.0 / x > 0.0;
 }
 CondItem* ImmediateItem::mkCond() {
 	int ival = util::strToNum<int>(ctype->str);

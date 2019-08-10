@@ -13,7 +13,7 @@
 #include "Check.hpp"
 #include "Env.hpp"
 #include "Attr.hpp"
-#include "../vistor/Pretty.hpp"
+#include "../visitor/Pretty.hpp"
 class Attr;
 /**
  * 用于填充符号表
