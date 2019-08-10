@@ -1,5 +1,0 @@
-/home/zl/workspace/clion/zlcompiler/cmake-build-debug-g/CMakeFiles/rebuild_cache.dir
-/home/zl/workspace/clion/zlcompiler/cmake-build-debug-g/CMakeFiles/edit_cache.dir
-/home/zl/workspace/clion/zlcompiler/cmake-build-debug-g/src/CMakeFiles/rebuild_cache.dir
-/home/zl/workspace/clion/zlcompiler/cmake-build-debug-g/src/CMakeFiles/zlcompiler.dir
-/home/zl/workspace/clion/zlcompiler/cmake-build-debug-g/src/CMakeFiles/edit_cache.dir
