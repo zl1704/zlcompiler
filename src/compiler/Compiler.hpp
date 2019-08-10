@@ -12,7 +12,7 @@
 #include "../parser/Lexer.hpp"
 #include "../parser/Parser.hpp"
 #include "../util/Source.hpp"
-#include "../vistor/Pretty.hpp"
+#include "../visitor/Pretty.hpp"
 #include "../util/includeGlobal.hpp"
 #include "Enter.hpp"
 #include "../jvm/Gen.hpp"

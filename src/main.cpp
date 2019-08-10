@@ -7,7 +7,7 @@
 //============================================================================
 
 #include "compiler/Compiler.hpp"
-#include "test/test.h"
+
 
 
  int main(int argc,char *argv[]){
@@ -15,7 +15,7 @@
 //	string fileName("E:/workspace/c++/zlcompiler/src/test/test.zl");
 //	string fileName("E:/workspace/c++/zlcompiler/src/test/test_syntax.zl");
 //	string fileName("E:/workspace/c++/zlcompiler/src/test/test_pretty.zl");
-	string fileName("E:/workspace/c++/zlcompiler/src/test/test_gen1.zl");
+	string fileName("../../src/test/test_gen1.zl");
 //	if(argc <2){
 //		cout<<"没有输入文件";
 //		return 0;
@@ -24,7 +24,7 @@
 	Compiler* complier =  Compiler::instance();
 	complier->compile(fileName);
 //	testmap();
-//	testBits();
+//	testBits();+-
 
 	return 0;
 }

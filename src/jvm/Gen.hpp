@@ -9,7 +9,7 @@
 #define JVM_GEN_HPP_
 #include "../util/global.hpp"
 #include "../util/includeGlobal.hpp"
-#include "../vistor/Pretty.hpp"
+#include "../visitor/Pretty.hpp"
 #include "../tree/Tree.hpp"
 #include "../util/Name.hpp"
 #include "../compiler/Check.hpp"

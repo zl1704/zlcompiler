@@ -20,7 +20,7 @@ Pretty* Pretty::instance() {
 	Pretty* pretty = (Pretty*) Context::get(prettyKey);
 	if (pretty == NULL) {
 		pretty = new Pretty();
-		Context::put(prettyKey, pretty);
+		Context::put((void*)prettyKey, pretty);
 	}
 	return pretty;
 }

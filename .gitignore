@@ -1,5 +1,14 @@
+<<<<<<< HEAD
+=======
+.idea
+cmake-build-debug-g/**
+>>>>>>> codegen_2.2
 .cproject
 .project
 .settings
 Debug/*.exe
+<<<<<<< HEAD
 Debug/*.o
+=======
+Debug/**/*.o
+>>>>>>> codegen_2.2
