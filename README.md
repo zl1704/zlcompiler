@@ -222,7 +222,34 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 		istore             5	// c = a[2]  (原值)	
 	
 		```
+	### 9. 成员属性或方法访问
 		
+		```
+		
+		Gen::visitExec: 	c = obj.aa;
+    
+		Gen::visitAssign:	c = obj.aa
+			18: aload              6
+			20: getfield           1
+			23: istore             5
+
+		Gen::visitExec: 	obj.aa = 5;
+    
+		Gen::visitAssign:	obj.aa = 5
+			25: aload              6
+			27: iconst_5  
+			28: putfield           1
+			
+		Gen::visitExec: 	obj.fun(1,2);
+    
+		Gen::visitApply:	obj.fun(1,2)
+			31: aload              6
+			33: iconst_1  
+			34: iconst_2  
+			35: invokevirtual      7
+			38: pop       
+		
+		```
 		
 	
 	
