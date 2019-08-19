@@ -1,0 +1,30 @@
+class A{
+
+	public int aa = 5;
+	private double dd = 6.6;
+	
+	public A(){
+	}
+	public void fun(double a, double b){
+		fun();
+		int c = 6 ;
+		A obj = new A();
+		c = obj.aa;
+		obj.aa = 5;
+		obj.fun(1,2);
+		
+		
+		A[][][] arrs = new A[2][3][4];
+		int[][][] arrs1 = new int[2][3][4];
+		int [] as = new int[10];
+		c = as[2]++;
+	}
+	
+	public int fun(int a,int b){
+		return a+b;
+	
+	}
+	
+	public void fun(){}
+
+}

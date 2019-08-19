@@ -1,0 +1,31 @@
+class A{
+
+	public void fun(double a, double b){
+		fun(1,2);
+		int c = (a>b?false:true) ? fun(1,2):2;
+		while(a<b){
+			a = a+1;
+			a+=1;
+			c++;
+			fun(++c,c--);
+		}
+		
+		
+		if( c >1 ){
+		
+			a+=1;
+			c++;
+			fun(++c,c--);
+		}else{
+		
+			c--;
+			fun(--c,c++);
+		}
+	}
+	
+	public int fun(int a,int b){
+		return a+b;
+	
+	}
+
+}

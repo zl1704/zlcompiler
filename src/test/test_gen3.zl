@@ -1,0 +1,26 @@
+class A{
+
+	public int aa = 5;
+	private double dd = 6.6;
+	
+	public A(){
+	}
+	public void fun(double a, double b){
+		fun();
+		
+		A obj = new A();
+		int c = obj.aa;
+		obj.aa = 5;
+	
+		
+	
+	}
+	
+	public int fun(int a,int b){
+		return a+b;
+	
+	}
+	
+	public void fun(){}
+
+}
