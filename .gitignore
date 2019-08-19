@@ -1,0 +1,7 @@
+.idea
+cmake-build-debug-g/**
+.cproject
+.project
+.settings
+Debug/*.exe
+Debug/**/*.o
