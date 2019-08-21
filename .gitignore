@@ -1,5 +1,5 @@
 .idea
-cmake-build-debug-g/**
+cmake-*/**
 .cproject
 .project
 .settings
