@@ -1,0 +1,4 @@
+/home/zl/program/clion/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -G "CodeBlocks - Unix Makefiles" /home/zl/workspace/clion/zlcompiler
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/zl/workspace/clion/zlcompiler/cmake-build-debug
