@@ -516,7 +516,8 @@ void Attr::visitSwitch(Switch* tree) {
 	}
 	bool hasDefault = false;
 	Case* c = NULL;
-	for (int i = 0; tree->cases.size(); i++) {
+	int csize = tree->cases.size();
+	for (int i = 0; i < csize; i++) {
 		c = tree->cases.at(i);
 
 		Env<AttrContext*>* caseEnv = switchEnv->dup(c,
@@ -535,7 +536,7 @@ void Attr::visitSwitch(Switch* tree) {
 	result = NULL;
 }
 void Attr::addVars(vector<Statement*> stats, Scope* switchScope) {
-	for (int i = 0; stats.size(); i++) {
+	for (int i = 0;i < stats.size(); i++) {
 		if (stats.at(i)->getTag() == Tree::VARDEF)
 			switchScope->enter(((VariableDecl*) stats.at(i))->sym);
 	}

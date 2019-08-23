@@ -6,7 +6,7 @@ class A{
 	public A(){
 	}
 	public void fun(double a, double b){
-		fun();
+		//fun();
 		
 		A obj = new A();
 		int c = obj.aa;
@@ -20,7 +20,29 @@ class A{
 		return a+b;
 	
 	}
+	public void fun(){
 	
-	public void fun(){}
-
+		int c = 5;
+		int a = 1;
+		switch(c){
+		
+		case 1:
+			a = 21;
+			break;
+		case 4:
+			a = 9;
+		case 3:
+			a = 21;
+			break;
+			
+		case 5:
+			a = 11;
+			break;
+		default:
+			
+		
+		}
+	}
+	
+	
 }

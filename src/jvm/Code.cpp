@@ -153,7 +153,7 @@ Code::Code(MethodSymbol* sym, Pool* pool) {
 	max_locals = 0;
 	max_stack = 0;
 	nextreg = 0;
-	cp = 1;
+	cp = 0;
 	pendingStatPos = -1;
 	syms = Symtab::instance();
 	state = new State(this);
@@ -942,7 +942,7 @@ void Code::emitop1(int op, int od) {
 	emitop(op);
 	if (util::debug) {
 //		cout <<  "\t " << od << endl;
-		printf("%10d\n",od);
+		printf("%8d\n",od);
 	}
 	if (!alive)
 		return;
@@ -976,7 +976,7 @@ void Code::emitop1w(int op, int od) {
 	}
 	if (util::debug) {
 //		cout << "\t " << od << endl;
-		printf("%10d\n",od);
+		printf("%8d\n",od);
 	}
 	if (!alive)
 		return;
@@ -1032,7 +1032,7 @@ void Code::emitop1w(int op, int od1, int od2) {
 	}
 	if (util::debug) {
 //		cout << "\t" << od1 << " , " << od2 << endl ;
-		printf("%10d , %10d",od1,od2);
+		printf("%8d , %8d",od1,od2);
 	}
 	if (!alive)
 		return;
@@ -1048,7 +1048,7 @@ void Code::emitop2(int op, int od) {
 	emitop(op);
 	if (util::debug) {
 		//cout <<" \t " << od << endl;
-		printf("%10d\n",od);
+		printf("%8d\n",od);
 	}
 	if (!alive)
 		return;
@@ -1125,7 +1125,7 @@ void Code::emitop4(int op, int od) {
 	emitop(op);
 	if (util::debug) {
 //		cout <<"\t" << od << endl;
-		printf("%10d\n",od);
+		printf("%8d\n",od);
 	}
 	if (!alive)
 		return;
@@ -1162,7 +1162,7 @@ void Code::emit4(int od) {
 void Code::emitop(int op) {
 	if (debug) {
 //		cout << " \tGen :\t " << ByteCodes::getCodeStr(op) ;
-		printf("\t %d: %-10s",cp, ByteCodes::getCodeStr(op).data());
+		printf("\t %d: %-8s",cp, ByteCodes::getCodeStr(op).data());
 	}
 	if (pendingJumps != NULL)
 		resolvePending();
@@ -1182,8 +1182,8 @@ int Code::get2(int pc) {
 	return (get1(pc) << 8) | get1(pc + 1);
 }
 int Code::get4(int pc) {
-	return (get1(pc) << 24) | get1(pc + 2) << 16 | get1(pc + 3) << 8
-			| get1(pc + 4);
+	return (get1(pc) << 24) | get1(pc + 1) << 16 | get1(pc + 2) << 8
+			| get1(pc + 3);
 }
 
 void Code::put1(int pc, int od) {
@@ -1224,7 +1224,7 @@ Chain* Chain::merge(Chain* c1, Chain* c2) {
 	if (c1->pc < c2->pc)
 		new_chain = new Chain(c2->pc, merge(c1, c2->next), c2->state);
 	new_chain = new Chain(c1->pc, merge(c1->next, c2), c1->state);
-	delete c1;
-	delete c2;
+	//delete c1;
+	//delete c2;
 	return new_chain;
 }

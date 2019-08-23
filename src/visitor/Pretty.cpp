@@ -31,7 +31,7 @@ void Pretty::debug(string msg,Tree* tree,int margin){
 		cout << msg;
 		tree->accept(instance());
 		cout << endl;
-
+		cout << endl;
 
 	}
 
