@@ -252,12 +252,16 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 		```
 		
 	### 10. switch-case
+	
 		有switchtable和lookupswitch两种方式：
+		
 	#### 1. switchtable
+	
 			优点：O(1)时间效率
 			缺点：空间开销大
 		
 		```
+		
 		根据空间和时间决定
 		long table_space_cost = 4 + ((long) hi - lo + 1); // words
 		long table_time_cost = 3; // comparisons
@@ -331,10 +335,13 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 			46: return_ 	
 			
 		```
+		
 	#### 2. lookupswitch
 
 		lookupswitch方式需要线性查找table
+		
 	```
+	
 		Gen::visitSwitch:
 			switch (c) {
 			case 1: 
@@ -357,7 +364,7 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 			}
 		
 
-		=============================	
+	=================================	
 			4: iload_1 
 			5: lookupswitch
 			6: nop     
