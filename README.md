@@ -251,6 +251,135 @@ zlcompiler一个类JAVA语法的编译器,学习编译原理的实践，为以�
 		
 		```
 		
+	### 10. switch-case
+		有switchtable和lookupswitch两种方式：
+		1. switchtable
+			优点：O(1)时间效率
+			缺点：空间开销大
+		
+		```
+		根据空间和时间决定
+		long table_space_cost = 4 + ((long) hi - lo + 1); // words
+		long table_time_cost = 3; // comparisons
+		long lookup_space_cost = 3 + 2 * (long) nlabels;
+		long lookup_time_cost = nlabels;
+		if (nlabels > 0
+				&& table_space_cost + 3 * table_time_cost
+						<= lookup_space_cost + 3 * lookup_time_cost)
+			opcode = ByteCodes::tableswitch;
+		else
+			opcode = ByteCodes::lookupswitch;
+		
+		```
+		
+			 tableswitch:
+				tableswitch
+				default
+				from to
+			 	case1
+			  	case2
+			  	....
+			 
+		```
+		
+		Gen::visitSwitch:
+			switch (c) {
+			case 1: 
+				a = 21;
+				break;
+
+			case 4: 
+				a = 9;
+
+			case 3: 
+				a = 21;
+				break;
+
+			case 5: 
+				a = 11;
+				break;
+
+			default: 
+
+			}
+			
+			 4: iload_1 
+			 5: tableswitch
+			 6: nop     //对齐
+			 7: nop  
+			switch table:{
+              1: 25
+              2: 31
+              3: 34
+              4: 46
+              5: 40
+        default: 46
+		}
+				
+			25: bipush        21
+			27: istore_2
+			28: goto_          0
+			31: bipush         9
+			33: istore_2
+			34: bipush        21
+			36: istore_2
+			37: goto_          0	
+			40: bipush        11
+			42: istore_2
+			43: goto_          0	
+			46: return_ 		
+		```
+	2. lookupswitch
+
+		lookupswitch方式需要线性查找table
+	```
+		Gen::visitSwitch:
+			switch (c) {
+			case 1: 
+				a = 21;
+				break;
+
+			case 4: 
+				a = 9;
+
+			case 3: 
+				a = 21;
+				break;
+
+			case 11: 
+				a = 11;
+				break;
+
+			default: 
+
+			}
+			4: iload_1 
+			5: lookupswitch
+			6: nop     
+			7: nop  
+		 switch table:{
+				  1: 26
+				  3: 35
+				  4: 32
+				 11: 41
+			default: 47
+		}
+	 
+			26: bipush        21
+			28: istore_2
+			29: goto_          47
+			32: bipush         9
+			34: istore_2
+			35: bipush        21
+			37: istore_2
+			38: goto_          47
+			41: bipush        11
+			43: istore_2
+			44: goto_          47
+			47: return_ 
+			
+	```
 	
+		
 	
 
